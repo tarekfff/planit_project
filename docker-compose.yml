@@ -1,0 +1,39 @@
+# =================================================================
+# docker-compose.yml — Planit
+#
+# Usage:
+#   Development:  docker compose up
+#   Production:   docker compose -f docker-compose.yml up --build
+#
+# Before running: copy .env.example → .env and fill in your values.
+# =================================================================
+
+services:
+
+  planit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # NEXT_PUBLIC_* must be passed at build time (Next.js inlines them)
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+
+    # Runtime env vars (server-side only — never exposed to the browser)
+    # Docker reads these from your .env file automatically
+    env_file:
+      - .env
+
+    ports:
+      - "3000:3000"
+
+    restart: unless-stopped
+
+    # Health check — Docker will mark the container unhealthy if
+    # the Next.js server stops responding
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
