@@ -1,19 +1,19 @@
 export const ROUTES = {
   auth: {
-    login: '/login',
+    login:    '/login',
     register: '/register',
-  },
-  public: {
-    home: '/',
-    booking: (wilaya: string, slug: string) => `/${wilaya}/${slug}`,
+    forgotPassword: '/forgot-password',
   },
   dashboard: {
-    admin: '/admin',
-    manager: {
-      index: '/manager',
-      appointments: '/manager/appointments',
-      professionals: '/manager/professionals',
-    },
-    professional: '/professional',
+    root:         '/dashboard',
+    admin:        '/dashboard/admin',
+    manager:      '/dashboard/manager',
+    professional: '/dashboard/professional',
+    appointments: '/dashboard/manager/appointments',
+    professionals:'/dashboard/manager/professionals',
   },
-} as const;
+  public: {
+    home:              '/',
+    establishment: (wilaya: string, slug: string) => `/${wilaya}/${slug}`,
+  },
+} as const

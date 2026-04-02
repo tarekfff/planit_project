@@ -1,20 +1,24 @@
-import 'server-only';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server'
+import type { Database } from '@/types/database.types'
+
+type Profile = Database['public']['Tables']['profiles']['Row']
 
 export async function getCurrentUser() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error) return null;
-  return data.user;
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
 }
 
-export async function getProfile(userId: string) {
-  const supabase = await createClient();
+export async function getCurrentProfile(): Promise<Profile | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
   const { data } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', userId)
-    .single();
-    
-  return data;
+    .eq('id', user.id)
+    .single()
+
+  return data
 }

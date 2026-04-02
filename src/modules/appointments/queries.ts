@@ -1,28 +1,37 @@
-import 'server-only';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server'
 
-export async function getAppointmentsForClient(clientId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+export async function getAppointmentsForClient() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data } = await supabase
     .from('appointments')
-    .select('*, professional:professionals(*), establishment:establishments(*)')
-    .eq('client_id', clientId)
-    .order('start_time', { ascending: false });
+    .select(`
+      id, start_time, end_time, status, client_notes,
+      service:services(name, price, duration_minutes),
+      professional:professionals(full_name, avatar_url),
+      establishment:establishments(name, address, wilaya)
+    `)
+    .eq('client_id', user.id)
+    .order('start_time', { ascending: true })
 
-  if (error) return [];
-  return data;
+  return data ?? []
 }
 
-export async function getScheduleForPro(professionalId: string, startDate: string, endDate: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+export async function getScheduleForEstablishment(establishmentId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase
     .from('appointments')
-    .select('*')
-    .eq('professional_id', professionalId)
-    .gte('start_time', startDate)
-    .lte('end_time', endDate)
-    .order('start_time', { ascending: true });
+    .select(`
+      id, start_time, end_time, status, internal_notes,
+      client:profiles!client_id(full_name, phone),
+      professional:professionals(full_name),
+      service:services(name, duration_minutes)
+    `)
+    .eq('establishment_id', establishmentId)
+    .neq('status', 'cancelled')
+    .order('start_time', { ascending: true })
 
-  if (error) return [];
-  return data;
+  return data ?? []
 }

@@ -1,11 +1,12 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-export const appointmentSchema = z.object({
-  professionalId: z.string().uuid(),
-  establishmentId: z.string().uuid(),
-  startTime: z.string().datetime(),
-  endTime: z.string().datetime(),
-  serviceId: z.string().uuid().optional(),
-});
+export const BookingSchema = z.object({
+  professional_id:  z.string().uuid(),
+  service_id:       z.string().uuid(),
+  establishment_id: z.string().uuid(),
+  start_time:       z.string().datetime(),
+  end_time:         z.string().datetime(),
+  client_notes:     z.string().max(500).optional(),
+})
 
-export type AppointmentInput = z.infer<typeof appointmentSchema>;
+export type BookingInput = z.infer<typeof BookingSchema>

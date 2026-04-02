@@ -1,27 +1,43 @@
-import { type NextRequest } from 'next/server';
-import { updateSession } from '@/lib/supabase/middleware';
+import { NextResponse, type NextRequest } from 'next/server'
+import { createClient } from '@/lib/supabase/middleware'
+import { ROUTES } from '@/lib/constants/routes'
 
 export async function middleware(request: NextRequest) {
-  // Update the session in case it has expired, using our helper
-  const supabaseResponse = await updateSession(request);
-  
-  // Basic route protection logic will go here
-  // Depending on the role, you logic redirects users who shouldn't access certain dashboards.
-  // const user = await supabase.auth.getUser()
-  // if (!user && request.nextUrl.pathname.startsWith('/manager')) {...}
+  const { supabase, response } = createClient(request)
+  const { data: { user } } = await supabase.auth.getUser()
+  const path = request.nextUrl.pathname
 
-  return supabaseResponse;
+  // Not logged in → redirect to login
+  if (!user && path.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL(ROUTES.auth.login, request.url))
+  }
+
+  // Logged in → redirect away from auth pages
+  if (user && (path === ROUTES.auth.login || path === ROUTES.auth.register)) {
+    return NextResponse.redirect(new URL(ROUTES.dashboard.root, request.url))
+  }
+
+  // Role-based access: get the role from the profile
+  if (user && path.startsWith('/dashboard')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = profile?.role
+
+    if (path.startsWith('/dashboard/admin') && role !== 'admin') {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    if (path.startsWith('/dashboard/manager') && !['manager', 'admin'].includes(role ?? '')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
+  return response
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-};
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+}

@@ -1,54 +1,139 @@
-'use server';
+'use server'
 
-import { loginSchema, registerSchema, LoginInput, RegisterInput } from './validators';
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { LoginSchema, RegisterSchema } from './validators'
+import { ROUTES } from '@/lib/constants/routes'
 
-export async function login(data: LoginInput) {
-  const result = loginSchema.safeParse(data);
-  if (!result.success) {
-    return { error: 'Invalid input' };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email: result.data.email,
-    password: result.data.password,
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  redirect('/manager');
+export type ActionResult = {
+  success: boolean
+  error?: string
+  data?: any
 }
 
-export async function register(data: RegisterInput) {
-  const result = registerSchema.safeParse(data);
-  if (!result.success) {
-    return { error: 'Invalid input' };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email: result.data.email,
-    password: result.data.password,
+export async function signInWithGoogle() {
+  const supabase = await createClient()
+  // Because we are running a Server Action, we must provide the absolute URL of the callback endpoint
+  // to successfully orchestrate the secure redirect handshake.
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
     options: {
-      data: {
-        name: result.data.name,
-      },
+      redirectTo: `${origin}/api/auth/callback`,
     },
-  });
+  })
 
   if (error) {
-    return { error: error.message };
+    throw new Error(error.message)
   }
 
-  redirect('/manager');
+  // Next.js explicitly forces a redirect to the payload URL (Google's servers)
+  redirect(data.url)
 }
 
-export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect('/login');
+export async function login(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = LoginSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword(parsed.data)
+  if (error) return { success: false, error: error.message }
+
+  redirect(ROUTES.dashboard.root)
+}
+
+export async function register(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = RegisterSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const { email, password, full_name, role } = parsed.data
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name, role }, // picked up by the handle_new_user() DB trigger
+    },
+  })
+
+  if (error) return { success: false, error: error.message }
+
+  return { success: true, data: { email } }
+}
+
+export async function verifyOtp(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { VerifyOtpSchema } = await import('./validators')
+  const parsed = VerifyOtpSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const { email, code } = parsed.data
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token: code,
+    type: 'signup',
+  })
+
+  if (error) return { success: false, error: error.message }
+
+  redirect(ROUTES.dashboard.root)
+}
+
+export async function requestPasswordReset(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { ResetPasswordRequestSchema } = await import('./validators')
+  const parsed = ResetPasswordRequestSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const { email } = parsed.data
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email)
+
+  if (error) return { success: false, error: error.message }
+
+  return { success: true, data: { email } }
+}
+
+export async function resetPasswordWithOtp(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { ResetPasswordVerifySchema } = await import('./validators')
+  const parsed = ResetPasswordVerifySchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const { email, code, password } = parsed.data
+  const supabase = await createClient()
+
+  // 1. Verify the OTP code
+  const { error: otpError } = await supabase.auth.verifyOtp({
+    email,
+    token: code,
+    type: 'recovery',
+  })
+
+  if (otpError) return { success: false, error: otpError.message }
+
+  // 2. The OTP successfully established an encrypted session. We can securely update the password now.
+  const { error: updateError } = await supabase.auth.updateUser({ password })
+
+  if (updateError) return { success: false, error: updateError.message }
+
+  // 3. Password successfully reset. Redirect immediately into the private dashboard.
+  redirect(ROUTES.dashboard.root)
+}
+
+export async function logout(formData?: FormData) {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect(ROUTES.auth.login)
 }
