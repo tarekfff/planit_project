@@ -33,6 +33,9 @@ export async function middleware(request: NextRequest) {
     if (path.startsWith('/dashboard/manager') && !['manager', 'admin'].includes(role ?? '')) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
+    if (path.startsWith('/dashboard/professional') && !['professional', 'manager', 'admin'].includes(role ?? '')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
   }
 
   return response
