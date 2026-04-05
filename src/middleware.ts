@@ -7,8 +7,13 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const path = request.nextUrl.pathname
 
-  // Not logged in → redirect to login
+  // Not logged in → redirect to login (Skipping Server Actions to avoid 'unexpected response' client errors)
+  const isServerAction = request.headers.has('next-action');
+
   if (!user && path.startsWith('/dashboard')) {
+    if (isServerAction) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL(ROUTES.auth.login, request.url))
   }
 

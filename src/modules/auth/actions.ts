@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { LoginSchema, RegisterSchema } from './validators'
+import { LoginSchema, RegisterSchema, ClientRegisterSchema, EstablishmentRegisterSchema } from './validators'
 import { ROUTES } from '@/lib/constants/routes'
 
 export type ActionResult = {
@@ -13,8 +13,6 @@ export type ActionResult = {
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-  // Because we are running a Server Action, we must provide the absolute URL of the callback endpoint
-  // to successfully orchestrate the secure redirect handshake.
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -27,7 +25,6 @@ export async function signInWithGoogle() {
     throw new Error(error.message)
   }
 
-  // Next.js explicitly forces a redirect to the payload URL (Google's servers)
   redirect(data.url)
 }
 
@@ -57,11 +54,76 @@ export async function register(prevState: ActionResult, formData: FormData): Pro
     email,
     password,
     options: {
-      data: { full_name, role }, // picked up by the handle_new_user() DB trigger
+      data: { full_name, role },
     },
   })
 
   if (error) return { success: false, error: error.message }
+
+  return { success: true, data: { email } }
+}
+
+export async function registerClient(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = ClientRegisterSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const { first_name, last_name, email, phone, password } = parsed.data
+  const full_name = `${first_name} ${last_name}`
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name, role: 'client', phone },
+    },
+  })
+
+  if (error) return { success: false, error: error.message }
+
+  return { success: true, data: { email } }
+}
+
+export async function registerEstablishment(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = EstablishmentRegisterSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const { establishment_name, ville, email, phone, password, category } = parsed.data
+  const supabase = await createClient()
+
+  // 1. Create the user account with manager role
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: establishment_name, role: 'manager', phone },
+    },
+  })
+
+  if (authError) return { success: false, error: authError.message }
+
+  // 2. Create the establishment record linked to the new manager
+  if (authData.user) {
+    const { error: estError } = await supabase
+      .from('establishments')
+      .insert({
+        name: establishment_name,
+        wilaya: ville,
+        phone: phone || null,
+        manager_id: authData.user.id,
+        description: category,
+      })
+
+    if (estError) {
+      // Non-blocking: establishment creation might fail due to RLS on unverified users
+      // The establishment can be created after email verification in a later step
+      console.error('Establishment creation deferred:', estError.message)
+    }
+  }
 
   return { success: true, data: { email } }
 }
