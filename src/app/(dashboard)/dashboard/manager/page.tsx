@@ -4,13 +4,30 @@ import { AppointmentsTable } from '@/components/features/dashboard/AppointmentsT
 import { DashboardAnalytics } from '@/components/features/dashboard/DashboardAnalytics';
 import { getManagerDashboardData } from '@/modules/dashboard/queries';
 import { redirect } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { logout } from "@/modules/auth/actions";
 
 export default async function ManagerDashboardPage() {
   const data = await getManagerDashboardData();
 
   if (!data) {
-    // If no data/establishment is found for this user, they might not be a valid manager or haven't finished setup
-    redirect('/login');
+    // If no data/establishment is found for this user, they haven't finished setup
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-6 max-w-lg mx-auto text-center">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Configuration requise</h1>
+          <p className="text-muted-foreground text-lg">
+            Votre compte est actif, mais aucun établissement n&apos;est associé à ce profil.
+            Veuillez finaliser la configuration de votre établissement ou contacter le support.
+          </p>
+        </div>
+        <form action={logout}>
+          <Button type="submit" variant="destructive" size="lg" className="px-8 shadow-sm font-semibold tracking-wide">
+            Se déconnecter
+          </Button>
+        </form>
+      </div>
+    );
   }
 
   const { establishment, metrics, recentAppointments, historyAppointments } = data;

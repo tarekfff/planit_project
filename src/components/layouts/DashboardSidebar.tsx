@@ -78,7 +78,7 @@ export function DashboardSidebar({ establishmentName = 'Planit', category = 'Ét
                             )}>
                                 <Icon className="w-4.5 h-4.5" />
                             </div>
-                            <span className="flex-1">{item.label}</span>
+                            <span className="flex-1 min-w-0 truncate">{item.label}</span>
                             {isActive && <ChevronRight className="w-3.5 h-3.5 text-gray-400" />}
                         </Link>
                     );
