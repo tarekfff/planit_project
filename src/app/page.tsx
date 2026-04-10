@@ -17,12 +17,14 @@ export default function HomePage() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-1.5">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">
-                <span className="text-primary">P</span>lanit
-              </span>
+              <Image
+                src="/logo.svg"
+                alt="Planit Logo"
+                width={146}
+                height={131}
+                className="w-12 h-auto"
+                priority
+              />
             </Link>
 
             {/* Nav Links - Desktop */}
@@ -226,7 +228,7 @@ export default function HomePage() {
               <h4 className="text-white font-bold mb-4">Contact</h4>
               <div className="space-y-2 text-sm">
                 <p>📧 contact@planit.dz</p>
-                <p>📞 +213 XX XX XX XX</p>
+                <p>📞 +213 554 85 26 33</p>
                 <p>📍 Boumerdès, Algérie</p>
                 <a href="#" className="block hover:text-primary transition-colors">Nous contacter</a>
                 <a href="#" className="block hover:text-primary transition-colors">Support & Aide</a>
