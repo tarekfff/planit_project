@@ -47,7 +47,7 @@ export default async function ClientDashboardPage() {
 
       <div className="p-6 bg-card/50 backdrop-blur-sm rounded-xl border shadow-sm max-w-md w-full border-primary/10">
         <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+          <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500 animate-pulse"></span>
           Client Account Details
         </h3>
         <div className="space-y-3 text-sm">
