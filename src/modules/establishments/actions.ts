@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { EstablishmentInput, establishmentSchema } from './validators';
+import { EstablishmentInput, establishmentSchema, profileUpdateSchema, workingHoursSchema, serviceSchema } from './validators';
 
 export async function createEstablishment(data: EstablishmentInput) {
   const result = establishmentSchema.safeParse(data);
@@ -32,43 +32,26 @@ export async function updateEstablishment(id: string, data: Partial<Establishmen
 export async function updateEstablishmentProfile(formData: FormData) {
   const supabase = await createClient();
 
-  // 1. Get current logged in user
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (!user) {
-    console.error("Auth Context Error during Action:", authError);
-    return { success: false, error: 'Non autorisé (Session expirée, veuillez rafraîchir la page)' };
-  }
+  // 1. Auth check
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Non autorisé' };
 
-  const name = formData.get('name')?.toString();
-  const description = formData.get('description')?.toString();
-  const category = formData.get('category')?.toString();
-  const address = formData.get('address')?.toString();
-  const phone = formData.get('phone')?.toString();
-  const contact_email = formData.get('contact_email')?.toString();
+  // 2. Validate
+  const rawData = Object.fromEntries(formData);
+  const result = profileUpdateSchema.safeParse(rawData);
 
-  if (!name) {
-    return { success: false, error: 'Le nom est requis' };
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
   }
 
   const { error } = await supabase
     .from('establishments')
-    .update({
-      name,
-      description,
-      category,
-      address,
-      phone,
-      contact_email
-    })
+    .update(result.data)
     .eq('manager_id', user.id);
 
-  if (error) {
-    return { success: false, error: error.message };
-  }
+  if (error) return { success: false, error: error.message };
 
   revalidatePath('/dashboard/manager/profile');
-  revalidatePath('/dashboard/manager');
-
   return { success: true };
 }
 
@@ -81,10 +64,16 @@ export async function updateEstablishmentHours(formData: FormData) {
   if (!working_hours_str) return { success: false, error: 'Données invalides' };
 
   try {
-    const working_hours = JSON.parse(working_hours_str);
+    const hours = JSON.parse(working_hours_str);
+    const result = workingHoursSchema.safeParse(hours);
+
+    if (!result.success) {
+      return { success: false, error: "Format des horaires invalide" };
+    }
+
     const { error } = await supabase
       .from('establishments')
-      .update({ working_hours })
+      .update({ working_hours: result.data })
       .eq('manager_id', user.id);
 
     if (error) throw error;
@@ -101,10 +90,12 @@ export async function addService(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Non autorisé' };
 
-  const name = formData.get('name')?.toString();
-  const duration_minutes = parseInt(formData.get('duration_minutes')?.toString() || '30', 10);
+  const rawData = Object.fromEntries(formData);
+  const result = serviceSchema.safeParse(rawData);
 
-  if (!name) return { success: false, error: 'Le nom du service est requis' };
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
 
   try {
     // Enforce fetching the manager's establishment id
@@ -119,8 +110,7 @@ export async function addService(formData: FormData) {
     const { error } = await supabase
       .from('services')
       .insert({
-        name,
-        duration_minutes,
+        ...result.data,
         establishment_id: est.id,
         is_active: true
       });

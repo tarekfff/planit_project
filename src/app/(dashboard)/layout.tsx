@@ -1,5 +1,5 @@
 import { DashboardSidebar } from '@/components/layouts/DashboardSidebar';
-import { getSidebarData } from '@/modules/dashboard/queries';
+import { getSidebarData } from '@/modules/establishments/queries';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { establishment } = await getSidebarData();

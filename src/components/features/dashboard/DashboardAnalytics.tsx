@@ -3,7 +3,19 @@
 import { CheckCircle2, XCircle, Clock, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function DashboardAnalytics() {
+export interface DashboardAnalyticsProps {
+    serviceTrends: { label: string; percent: number }[];
+    pendingItems: { id: string; pro: string; service: string; time: string }[];
+    occupancyRates: { label: string; percent: number; color: string }[];
+    cancellations: { client: string; time: string }[];
+}
+
+export function DashboardAnalytics({
+    serviceTrends,
+    pendingItems,
+    occupancyRates,
+    cancellations
+}: DashboardAnalyticsProps) {
     return (
         <div className="space-y-6">
             {/* First Row: Services & Confirmations */}
@@ -12,12 +24,7 @@ export function DashboardAnalytics() {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-6">Services les plus demandés</h3>
                     <div className="space-y-4">
-                        {[
-                            { label: 'Consultation Générale', percent: 45, color: 'bg-purple-500' },
-                            { label: 'Détartrage', percent: 30, color: 'bg-orange-400' },
-                            { label: 'Extraction', percent: 15, color: 'bg-cyan-400' },
-                            { label: 'Blanchiment', percent: 10, color: 'bg-gray-300' },
-                        ].map((item) => (
+                        {serviceTrends.length > 0 ? serviceTrends.map((item, i) => (
                             <div key={item.label} className="space-y-1.5">
                                 <div className="flex justify-between text-xs font-bold text-gray-700">
                                     <span>{item.label}</span>
@@ -25,12 +32,16 @@ export function DashboardAnalytics() {
                                 </div>
                                 <div className="h-2 w-full bg-gray-50 rounded-full overflow-hidden">
                                     <div
-                                        className={cn("h-full rounded-full transition-all duration-1000", item.color)}
+                                        className={cn("h-full rounded-full transition-all duration-1000", 
+                                            i === 0 ? "bg-purple-500" : i === 1 ? "bg-orange-400" : i === 2 ? "bg-cyan-400" : "bg-gray-300"
+                                        )}
                                         style={{ width: `${item.percent}%` }}
                                     />
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-10 text-gray-400 text-sm">Aucune donnée disponible</div>
+                        )}
                     </div>
                 </div>
 
@@ -38,13 +49,10 @@ export function DashboardAnalytics() {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-6">En attente confirmation</h3>
                     <div className="space-y-4">
-                        {[
-                            { pro: 'Dr. Sara', service: 'Détartrage', time: '09h30', avatar: 'bg-indigo-50 text-indigo-600' },
-                            { pro: 'Dr. Meriem', service: 'Blanchiment', time: '14h00', avatar: 'bg-pink-50 text-pink-600' },
-                        ].map((item, i) => (
+                        {pendingItems.length > 0 ? pendingItems.map((item, i) => (
                             <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold", item.avatar)}>
-                                    {item.pro.split(' ')[1][0]}
+                                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-indigo-50 text-indigo-600")}>
+                                    {item.pro.split(' ')[1]?.[0] || 'P'}
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-gray-900">{item.pro} — <span className="text-gray-500 font-medium">{item.service}</span></p>
@@ -52,7 +60,9 @@ export function DashboardAnalytics() {
                                 </div>
                                 <button className="text-xs font-bold text-primary hover:underline">Voir</button>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-10 text-gray-400 text-sm">Tout est à jour !</div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -63,11 +73,7 @@ export function DashboardAnalytics() {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-6">Taux d&apos;occupation</h3>
                     <div className="space-y-4">
-                        {[
-                            { label: 'Dr. Sofia', percent: 80, color: 'bg-purple-500' },
-                            { label: 'Dr. Karim', percent: 30, color: 'bg-orange-400' },
-                            { label: 'Dr. Amina', percent: 15, color: 'bg-cyan-400' },
-                        ].map((item) => (
+                        {occupancyRates.length > 0 ? occupancyRates.map((item) => (
                             <div key={item.label} className="space-y-1.5 focus-within:ring-2">
                                 <div className="flex justify-between text-xs font-bold text-gray-700">
                                     <span>{item.label}</span>
@@ -80,7 +86,9 @@ export function DashboardAnalytics() {
                                     />
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-10 text-gray-400 text-sm">Aucun professionnel actif</div>
+                        )}
                     </div>
                 </div>
 
@@ -88,10 +96,7 @@ export function DashboardAnalytics() {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-6">Annulations du jour</h3>
                     <div className="space-y-4">
-                        {[
-                            { client: 'Dr. Hamid', time: '08h00' },
-                            { client: 'Salim mezian', time: '10h00' },
-                        ].map((item, i) => (
+                        {cancellations.length > 0 ? cancellations.map((item, i) => (
                             <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                                 <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
                                     <XCircle className="w-5 h-5 text-red-500" />
@@ -101,7 +106,9 @@ export function DashboardAnalytics() {
                                     <p className="text-xs text-gray-400">Annulé</p>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-10 text-gray-400 text-sm">Aucune annulation aujourd&apos;hui</div>
+                        )}
                     </div>
                 </div>
             </div>

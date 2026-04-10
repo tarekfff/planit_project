@@ -56,3 +56,21 @@ export async function cancelAppointment(appointmentId: string): Promise<ActionRe
   revalidatePath('/dashboard')
   return { success: true }
 }
+
+export async function updateAppointmentStatus(appointmentId: string, status: 'confirmed' | 'cancelled' | 'completed' | 'no_show'): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Non autorisé' }
+
+  // 1. Verify that the user is the manager of the establishment for this appointment
+  // The easiest way is to let RLS handle it, but we can do a check for better error reporting
+  const { error } = await supabase
+    .from('appointments')
+    .update({ status })
+    .eq('id', appointmentId);
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/dashboard/manager')
+  return { success: true }
+}

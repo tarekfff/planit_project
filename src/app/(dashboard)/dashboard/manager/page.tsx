@@ -2,15 +2,22 @@ import { DashboardHeader } from '@/components/features/dashboard/DashboardHeader
 import { StatsCards } from '@/components/features/dashboard/StatsCards';
 import { AppointmentsTable } from '@/components/features/dashboard/AppointmentsTable';
 import { DashboardAnalytics } from '@/components/features/dashboard/DashboardAnalytics';
-import { getManagerDashboardData } from '@/modules/dashboard/queries';
+import { getEstablishmentForManager, getDashboardStats, getServiceTrends, getOccupancyRates } from '@/modules/establishments/queries';
+import { getManagerDashboardAppointments } from '@/modules/appointments/queries';
 import { redirect } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { logout } from "@/modules/auth/actions";
+import { createClient } from '@/lib/supabase/server';
+import { cn } from '@/lib/utils';
 
 export default async function ManagerDashboardPage() {
-  const data = await getManagerDashboardData();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  if (!data) {
+  const establishment = await getEstablishmentForManager(user.id);
+
+  if (!establishment) {
     // If no data/establishment is found for this user, they haven't finished setup
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-6 max-w-lg mx-auto text-center">
@@ -30,7 +37,24 @@ export default async function ManagerDashboardPage() {
     );
   }
 
-  const { establishment, metrics, recentAppointments, historyAppointments } = data;
+  // Parallel fetch for better performance
+  const [
+    { metrics: apptMetrics, recent, history, pendingItems, dailyActivity },
+    estStats,
+    serviceTrends,
+    occupancyRates
+  ] = await Promise.all([
+    getManagerDashboardAppointments(establishment.id),
+    getDashboardStats(establishment.id),
+    getServiceTrends(establishment.id),
+    getOccupancyRates(establishment.id)
+  ]);
+
+  const metrics = {
+    ...apptMetrics,
+    proCount: estStats.proCount,
+    satisfaction: estStats.satisfaction
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-gray-50/30">
@@ -43,7 +67,7 @@ export default async function ManagerDashboardPage() {
         {/* Middle Section: Recent Appointments & Vertical Chart */}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <AppointmentsTable title="Rendez-vous" appointments={recentAppointments} />
+            <AppointmentsTable title="Rendez-vous" appointments={recent} />
           </div>
 
           {/* Daily Activity Vertical Bar Chart Placeholder */}
@@ -53,18 +77,13 @@ export default async function ManagerDashboardPage() {
               <span className="text-[10px] text-gray-400 font-bold uppercase">Cette Semaine</span>
             </div>
             <div className="flex-1 flex items-end justify-between gap-2 px-2">
-              {[
-                { day: 'Sa', val: 70, color: 'bg-purple-500' },
-                { day: 'Di', val: 55, color: 'bg-orange-400' },
-                { day: 'Lu', val: 85, color: 'bg-indigo-500' },
-                { day: 'Ma', val: 30, color: 'bg-cyan-400' },
-                { day: 'Me', val: 0, color: 'bg-gray-100' },
-                { day: 'Je', val: 75, color: 'bg-orange-400' },
-                { day: 'Ve', val: 85, color: 'bg-purple-500' },
-              ].map((d) => (
+              {dailyActivity.map((d) => (
                 <div key={d.day} className="flex flex-col items-center gap-2 flex-1">
                   <div
-                    className={`w-full rounded-md ${d.color} transition-all duration-1000 origin-bottom`}
+                    className={cn(
+                        "w-full rounded-md transition-all duration-1000 origin-bottom",
+                        d.day === 'Lu' ? 'bg-indigo-500' : d.day === 'Di' ? 'bg-orange-400' : 'bg-purple-500'
+                    )}
                     style={{ height: `${d.val}%` }}
                   />
                   <span className="text-[10px] font-bold text-gray-400 uppercase">{d.day}</span>
@@ -75,12 +94,17 @@ export default async function ManagerDashboardPage() {
         </div>
 
         {/* Analytics Widgets */}
-        <DashboardAnalytics />
+        <DashboardAnalytics 
+            serviceTrends={serviceTrends}
+            pendingItems={pendingItems}
+            occupancyRates={occupancyRates}
+            cancellations={[]} // Placeholder
+        />
 
         {/* History Table */}
         <AppointmentsTable
           title="Historique des RDV"
-          appointments={historyAppointments}
+          appointments={history}
           showDate={true}
         />
       </div>

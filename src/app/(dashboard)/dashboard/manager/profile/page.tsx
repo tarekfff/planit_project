@@ -1,4 +1,4 @@
-import { getEstablishmentProfileData } from "@/modules/dashboard/queries";
+import { getEstablishmentProfileData } from "@/modules/establishments/queries";
 import { ProfileHeader } from "@/components/features/profile/ProfileHeader";
 import { ProfileMainInfo } from "@/components/features/profile/ProfileMainInfo";
 import { ProfileServices } from "@/components/features/profile/ProfileServices";
