@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Pencil, Loader2, X } from 'lucide-react';
-import { updateEstablishmentProfile } from '@/modules/profile/actions';
+import { updateEstablishmentProfile } from '@/modules/establishments/actions';
 import { Button } from '@/components/ui/button';
 
 interface EditProfileModalProps {
@@ -82,14 +82,23 @@ export function EditProfileModal({ establishment }: EditProfileModalProps) {
 
                             <div className="space-y-1.5">
                                 <label className="text-sm font-bold text-gray-700">Catégorie / Spécialité</label>
-                                {/* We map 'description' field as category to match DB. We might need a separate field in a real app. */}
                                 <input
+                                    name="category"
+                                    defaultValue={establishment?.category}
+                                    placeholder="Ex: Clinique Dentaire, Salon de beauté..."
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-bold text-gray-700">Description</label>
+                                <textarea
                                     name="description"
                                     defaultValue={establishment?.description}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-gray-500"
-                                    readOnly={true}
+                                    rows={4}
+                                    placeholder="Décrivez votre établissement..."
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium resize-y"
                                 />
-                                <p className="text-xs text-gray-400">Pour changer de catégorie, contactez le support.</p>
                             </div>
 
                             <div className="space-y-1.5">
@@ -106,6 +115,17 @@ export function EditProfileModal({ establishment }: EditProfileModalProps) {
                                 <input
                                     name="phone"
                                     defaultValue={establishment?.phone}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-bold text-gray-700">Email de contact</label>
+                                <input
+                                    name="contact_email"
+                                    type="email"
+                                    defaultValue={establishment?.contact_email}
+                                    placeholder="Ex: contact@clinique.com"
                                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                                 />
                             </div>

@@ -1,0 +1,4 @@
+ALTER TABLE public.establishments
+ADD COLUMN IF NOT EXISTS category TEXT,
+ADD COLUMN IF NOT EXISTS contact_email TEXT,
+ADD COLUMN IF NOT EXISTS working_hours JSONB;

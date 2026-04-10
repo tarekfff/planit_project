@@ -23,7 +23,7 @@ export function ProfileMainInfo({ establishment, userEmail }: ProfileMainInfoPro
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="font-bold text-gray-900 min-w-[90px]">Catégorie :</span>
-                            <span className="text-gray-600">{establishment?.description || 'Non défini'}</span>
+                            <span className="text-gray-600">{establishment?.category || 'Non défini'}</span>
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="font-bold text-gray-900 min-w-[90px]">Adresse :</span>
@@ -35,15 +35,7 @@ export function ProfileMainInfo({ establishment, userEmail }: ProfileMainInfoPro
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="font-bold text-gray-900 min-w-[90px]">Email :</span>
-                            <span className="text-gray-600">{userEmail || 'Non renseigné'}</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="font-bold text-gray-900 min-w-[90px]">Note :</span>
-                            <div className="flex items-center gap-1.5 text-gray-600">
-                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                <span className="font-bold">4.8</span>
-                                <span className="text-gray-400">/ 5 (124 avis)</span>
-                            </div>
+                            <span className="text-gray-600">{establishment?.contact_email || userEmail || 'Non renseigné'}</span>
                         </li>
                     </ul>
                 </div>
@@ -51,15 +43,8 @@ export function ProfileMainInfo({ establishment, userEmail }: ProfileMainInfoPro
                 {/* Description */}
                 <div>
                     <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
-                    <div className="text-sm text-gray-600 leading-relaxed space-y-4">
-                        <p>
-                            Bienvenue chez {establishment?.name || "nous"}, votre référence de confiance pour vos besoins de santé.
-                            Notre équipe de professionnels qualifiés vous accueille dans un cadre moderne et confortable
-                            pour vous offrir des soins de qualité adaptés à vos besoins.
-                        </p>
-                        <p>
-                            Votre satisfaction est notre priorité. Contactez-nous pour plus d'informations ou pour prendre rendez-vous !
-                        </p>
+                    <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                        {establishment?.description || 'Aucune description disponible pour cet établissement.'}
                     </div>
                 </div>
             </div>

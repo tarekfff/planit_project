@@ -1,3 +1,5 @@
+import { EditServicesModal } from "./EditServicesModal";
+
 interface ProfileServicesProps {
     services: any[];
 }
@@ -5,15 +7,18 @@ interface ProfileServicesProps {
 export function ProfileServices({ services }: ProfileServicesProps) {
     // Fallback data if none provided by db
     const displayServices = services?.length > 0 ? services : [
-        { id: 1, name: 'Consultation Générale', duration: 30, color: 'bg-cyan-100/80', textColor: 'text-cyan-600' },
-        { id: 2, name: 'Détartrage & Nettoyage', duration: 45, color: 'bg-orange-100/80', textColor: 'text-orange-600' },
-        { id: 3, name: 'Extraction Dentaire', duration: 30, color: 'bg-yellow-100/80', textColor: 'text-yellow-600' },
-        { id: 4, name: 'Traitement de Canal', duration: 60, color: 'bg-purple-100/80', textColor: 'text-purple-600' },
+        { id: 1, name: 'Consultation Générale', duration_minutes: 30, color: 'bg-cyan-100/80', textColor: 'text-cyan-600' },
+        { id: 2, name: 'Détartrage & Nettoyage', duration_minutes: 45, color: 'bg-orange-100/80', textColor: 'text-orange-600' },
+        { id: 3, name: 'Extraction Dentaire', duration_minutes: 30, color: 'bg-yellow-100/80', textColor: 'text-yellow-600' },
+        { id: 4, name: 'Traitement de Canal', duration_minutes: 60, color: 'bg-purple-100/80', textColor: 'text-purple-600' },
     ];
 
     return (
         <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Nos Services</h2>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Nos Services</h2>
+                <EditServicesModal services={services} />
+            </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {displayServices.map((service, index) => {
@@ -30,7 +35,7 @@ export function ProfileServices({ services }: ProfileServicesProps) {
                                 {service.name}
                             </h3>
                             <div className={`mt-4 text-sm font-bold ${service.textColor || defaultText}`}>
-                                {service.duration} min
+                                {service.duration_minutes} min
                             </div>
                         </div>
                     );

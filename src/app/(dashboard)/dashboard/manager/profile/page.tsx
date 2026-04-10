@@ -29,14 +29,8 @@ export default async function ManagerProfilePage() {
                 {/* Services */}
                 <ProfileServices services={services} />
 
-                {/* Professionals */}
-                <ProfileProfessionals professionals={professionals} />
-
                 {/* Opening Hours */}
-                <ProfileHours />
-
-                {/* Photos */}
-                <ProfilePhotos />
+                <ProfileHours establishment={establishment} />
             </div>
         </div>
     );
