@@ -1,20 +1,35 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database.types'
 
+/**
+ * Creates a Supabase client for Server Components, Server Actions, and Route Handlers.
+ *
+ * Uses the modern getAll/setAll API. The try/catch in setAll is intentional:
+ * Server Components cannot write cookies (read-only headers), so setAll will
+ * throw — that's fine because the middleware already handles token refresh and
+ * cookie persistence before the Server Component runs.
+ */
 export async function createClient() {
   const cookieStore = await cookies()
+
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name) => cookieStore.get(name)?.value,
-        set: (name, value, options) => {
-          try { cookieStore.set({ name, value, ...options }) } catch {}
+        getAll() {
+          return cookieStore.getAll()
         },
-        remove: (name, options) => {
-          try { cookieStore.set({ name, value: '', ...options }) } catch {}
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch {
+            // Called from a Server Component — middleware handles the refresh.
+            // This is the expected Supabase SSR pattern.
+          }
         },
       },
     }
