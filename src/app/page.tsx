@@ -22,8 +22,9 @@ export default function HomePage() {
                 alt="Planit Logo"
                 width={146}
                 height={131}
-                className="w-12 h-auto"
+                className="w-24 pt-5 h-auto"
                 priority
+                unoptimized
               />
             </Link>
 
