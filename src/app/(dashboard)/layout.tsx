@@ -2,11 +2,12 @@ import { DashboardSidebar } from '@/components/layouts/DashboardSidebar';
 import { getSidebarData } from '@/modules/establishments/queries';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { establishment } = await getSidebarData();
+  const { establishment, profile } = await getSidebarData();
 
   return (
     <div className="flex min-h-screen bg-gray-50/50">
       <DashboardSidebar
+        role={profile?.role}
         establishmentName={establishment?.name}
         category={establishment?.description}
       />
