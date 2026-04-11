@@ -83,6 +83,11 @@ export default function CalendarView({
   }, [initialAppointments]);
 
   // --- Handlers ---
+  const handleManualAdd = () => {
+    setSelectedSlot(null);
+    setSelectedAppointment(null);
+    setIsModalOpen(true);
+  };
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     setSelectedSlot({ start: selectInfo.start, end: selectInfo.end });
@@ -227,9 +232,22 @@ export default function CalendarView({
             background: #f3f4f6; border-color: #d1d5db; color: #111827;
           }
           .fc .fc-button-primary:not(:disabled).fc-button-active {
-            background: #7c3aed; border-color: #7c3aed; color: #fff;
+            background: #f5f3ff; border-color: #ddd6fe; color: #7c3aed;
           }
           .fc .fc-today-button { border-radius: 10px !important; }
+
+          /* Primary CTA: Add Appointment Button */
+          .fc .fc-addAppointment-button {
+            background: #7c3aed !important;
+            border-color: #7c3aed !important;
+            color: white !important;
+            margin-left: 12px !important;
+            padding: 6px 16px;
+          }
+          .fc .fc-addAppointment-button:hover {
+            background: #6d28d9 !important;
+            transform: scale(0.98);
+          }
 
           /* ─── Column Headers ─── */
           .fc-theme-standard th { border: none; background: #fafbfc; }
@@ -249,11 +267,15 @@ export default function CalendarView({
           }
 
           /* ─── Grid Slots (15-min) ─── */
-          .fc-timegrid-slot { height: 28px !important; }
+          .fc-timegrid-slot { height: 28px !important; transition: background-color 0.1s; }
           .fc-timegrid-slot-minor { border-top: 1px dotted #f0f0f2 !important; }
           .fc .fc-timegrid-slot:not(.fc-timegrid-slot-minor) { border-top: 1px solid #e8e8ec !important; }
           .fc-theme-standard td { border-color: var(--fc-border-color); }
           .fc .fc-timegrid-col.fc-day-today { background: var(--fc-today-bg-color) !important; }
+
+          /* Affordance: Clickable Empty Slots */
+          .fc-timegrid-cols td { cursor: pointer; transition: background-color 0.15s; }
+          .fc-timegrid-cols td:hover { background-color: rgba(124, 58, 237, 0.02) !important; }
 
           /* ─── Events ─── */
           .fc-v-event {
@@ -295,8 +317,14 @@ export default function CalendarView({
         <FullCalendar
           plugins={[timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
+          customButtons={{
+            addAppointment: {
+              text: '➕ Nouveau RDV',
+              click: handleManualAdd
+            }
+          }}
           headerToolbar={{
-            left: 'prev,next today',
+            left: 'prev,next today addAppointment',
             center: 'title',
             right: 'timeGridWeek,timeGridDay'
           }}
