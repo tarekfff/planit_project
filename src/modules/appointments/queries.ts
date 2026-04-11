@@ -1,4 +1,67 @@
-import { createClient } from '@/lib/supabase/server'
+import 'server-only';
+import { createClient } from '@/lib/supabase/server';
+
+/**
+ * Fetch all appointments for the manager's establishment.
+ * Joins professional name + service name for calendar display.
+ */
+export async function getManagerAppointments() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { appointments: [], professionals: [], services: [] };
+
+  // Get manager's establishment
+  const { data: est } = await supabase
+    .from('establishments')
+    .select('id')
+    .eq('manager_id', user.id)
+    .maybeSingle();
+
+  if (!est) return { appointments: [], professionals: [], services: [] };
+
+  // Appointments with joins
+  const { data: appointments } = await supabase
+    .from('appointments')
+    .select(`
+      id,
+      start_time,
+      end_time,
+      status,
+      client_notes,
+      internal_notes,
+      client_id,
+      professional_id,
+      service_id,
+      professionals ( id, full_name ),
+      services ( id, name )
+    `)
+    .eq('establishment_id', est.id)
+    .neq('status', 'cancelled')
+    .order('start_time', { ascending: true });
+
+  // Active professionals for the dropdown
+  const { data: professionals } = await supabase
+    .from('professionals')
+    .select('id, full_name')
+    .eq('establishment_id', est.id)
+    .eq('is_active', true)
+    .order('full_name');
+
+  // Active services for the dropdown
+  const { data: services } = await supabase
+    .from('services')
+    .select('id, name, duration_minutes')
+    .eq('establishment_id', est.id)
+    .eq('is_active', true)
+    .order('name');
+
+  return {
+    appointments: appointments || [],
+    professionals: professionals || [],
+    services: services || [],
+    establishmentId: est.id,
+  };
+}
 
 export async function getAppointmentsForClient() {
   const supabase = await createClient()
@@ -47,7 +110,7 @@ export async function getManagerDashboardAppointments(establishmentId: string) {
       end_time,
       status,
       client_notes,
-      profiles!client_id (full_name),
+      profiles!appointments_client_id_fkey (full_name),
       professionals!professional_id (full_name),
       services!service_id (name)
     `)
@@ -96,9 +159,7 @@ export async function getManagerDashboardAppointments(establishmentId: string) {
   // Calculate daily activity for the bar chart
   const weekDays = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
   const dailyActivity = weekDays.map((label, index) => {
-    const dayDate = new Date(weekStart);
-    dayDate.setDate(weekStart.getDate() + (index === 0 ? 6 : index - 1)); // Adjust for Monday start if needed
-    // Actually simpler:
+    // Determine the date for each day of the current week window
     const dayApts = activeAppointments.filter((apt: any) => {
         const d = new Date(apt.start_time);
         return d.getDay() === index && d >= weekStart && d <= weekEnd;

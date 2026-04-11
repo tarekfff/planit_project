@@ -26,8 +26,17 @@ export const workingHourSchema = z.object({
 
 export const workingHoursSchema = z.array(workingHourSchema);
 
-export const serviceSchema = z.object({
+export const addServiceSchema = z.object({
   name: z.string().min(2, "Le nom du service est trop court"),
   duration_minutes: z.coerce.number().min(5, "La durée minimum est de 5 minutes").max(480),
-  price: z.coerce.number().optional().default(0),
+  description: z.string().optional(),
+  is_active: z.union([z.boolean(), z.string()]).transform(v => v === 'true' || v === true).default(true)
+});
+
+export const editServiceSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(2, "Le nom du service est trop court"),
+  duration_minutes: z.coerce.number().min(5, "La durée minimum est de 5 minutes").max(480),
+  description: z.string().optional(),
+  is_active: z.union([z.boolean(), z.string()]).transform(v => v === 'true' || v === true).default(true)
 });

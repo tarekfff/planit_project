@@ -85,20 +85,20 @@ export async function updateEstablishmentHours(formData: FormData) {
   }
 }
 
-export async function addService(formData: FormData) {
+export async function addService(prevState: any, formData: FormData) {
+  const { addServiceSchema } = await import('./validators');
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Non autorisé' };
 
   const rawData = Object.fromEntries(formData);
-  const result = serviceSchema.safeParse(rawData);
+  const result = addServiceSchema.safeParse(rawData);
 
   if (!result.success) {
     return { success: false, error: result.error.issues[0].message };
   }
 
   try {
-    // Enforce fetching the manager's establishment id
     const { data: est, error: estError } = await supabase
       .from('establishments')
       .select('id')
@@ -111,13 +111,54 @@ export async function addService(formData: FormData) {
       .from('services')
       .insert({
         ...result.data,
-        establishment_id: est.id,
-        is_active: true
+        establishment_id: est.id
       });
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/manager/profile');
+    revalidatePath('/dashboard/manager/professionals');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
+export async function updateService(prevState: any, formData: FormData) {
+  const { editServiceSchema } = await import('./validators');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Non autorisé' };
+
+  const rawData = Object.fromEntries(formData);
+  const result = editServiceSchema.safeParse(rawData);
+
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
+  try {
+    const { data: est, error: estError } = await supabase
+      .from('establishments')
+      .select('id')
+      .eq('manager_id', user.id)
+      .maybeSingle();
+
+    if (estError || !est) throw new Error("Établissement introuvable");
+
+    const { error } = await supabase
+      .from('services')
+      .update({
+        name: result.data.name,
+        duration_minutes: result.data.duration_minutes,
+        description: result.data.description,
+        is_active: result.data.is_active
+      })
+      .eq('id', result.data.id)
+      .eq('establishment_id', est.id);
+
+    if (error) throw error;
+
+    revalidatePath('/dashboard/manager/professionals');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -130,7 +171,6 @@ export async function deleteService(serviceId: string) {
   if (!user) return { success: false, error: 'Non autorisé' };
 
   try {
-    // Find the establishment for the manager to safely delete the right service
     const { data: est, error: estError } = await supabase
       .from('establishments')
       .select('id')
@@ -147,7 +187,7 @@ export async function deleteService(serviceId: string) {
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/manager/profile');
+    revalidatePath('/dashboard/manager/professionals');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
