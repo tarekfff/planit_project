@@ -18,7 +18,7 @@ export async function getProfessional(id: string) {
     .from('professionals')
     .select('*, working_hours(*)')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (error) return null;
   return data;

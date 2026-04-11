@@ -18,7 +18,7 @@ export async function getById(id: string) {
     .from('establishments')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (error) return null;
   return data;
@@ -30,7 +30,7 @@ export async function getEstablishmentForManager(managerId: string) {
     .from('establishments')
     .select('*')
     .eq('manager_id', managerId)
-    .single();
+    .maybeSingle();
 
   if (error) return null;
   return data;
@@ -116,7 +116,7 @@ export async function getSidebarData() {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   let establishment = null;
   if (profile?.role === 'manager' || profile?.role === 'admin') {
@@ -124,7 +124,7 @@ export async function getSidebarData() {
       .from('establishments')
       .select('name, description, logo_url')
       .eq('manager_id', user.id)
-      .single();
+      .maybeSingle();
     establishment = est;
   }
 
@@ -141,7 +141,7 @@ export async function getEstablishmentProfileData() {
     .from('establishments')
     .select('*')
     .eq('manager_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!establishment) return null;
 

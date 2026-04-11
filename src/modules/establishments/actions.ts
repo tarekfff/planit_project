@@ -103,7 +103,7 @@ export async function addService(formData: FormData) {
       .from('establishments')
       .select('id')
       .eq('manager_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (estError || !est) throw new Error("Établissement introuvable");
 
@@ -135,7 +135,7 @@ export async function deleteService(serviceId: string) {
       .from('establishments')
       .select('id')
       .eq('manager_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (estError || !est) throw new Error("Établissement introuvable");
 
