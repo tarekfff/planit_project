@@ -13,11 +13,11 @@ export async function getManagerAppointments() {
   // Get manager's establishment
   const { data: est } = await supabase
     .from('establishments')
-    .select('id')
+    .select('id, working_hours')
     .eq('manager_id', user.id)
     .maybeSingle();
 
-  if (!est) return { appointments: [], professionals: [], services: [] };
+  if (!est) return { appointments: [], professionals: [], services: [], workingHours: [] };
 
   // Appointments with joins
   const { data: appointments } = await supabase
@@ -60,6 +60,7 @@ export async function getManagerAppointments() {
     professionals: professionals || [],
     services: services || [],
     establishmentId: est.id,
+    workingHours: est.working_hours || [],
   };
 }
 

@@ -25,6 +25,7 @@ export default async function CalendarPage() {
         professionals={data.professionals}
         services={data.services}
         establishmentId={data.establishmentId}
+        workingHours={data.workingHours}
       />
     </div>
   );

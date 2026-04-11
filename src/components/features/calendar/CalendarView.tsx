@@ -42,6 +42,7 @@ interface CalendarViewProps {
   professionals: Professional[];
   services: Service[];
   establishmentId: string;
+  workingHours?: any[];
 }
 
 export default function CalendarView({
@@ -49,6 +50,7 @@ export default function CalendarView({
   professionals,
   services,
   establishmentId,
+  workingHours = [],
 }: CalendarViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
@@ -81,6 +83,27 @@ export default function CalendarView({
   useEffect(() => {
     setLocalEvents(mapEvents(initialAppointments));
   }, [initialAppointments]);
+
+  const businessHours = workingHours.reduce((acc: any[], wh: any) => {
+    if (!wh.closed && wh.time && wh.time !== 'Fermé') {
+        const DAY_MAP: Record<string, number> = {
+            'Dimanche': 0, 'Lundi': 1, 'Mardi': 2, 'Mercredi': 3, 'Jeudi': 4, 'Vendredi': 5, 'Samedi': 6
+        };
+        const parts = wh.time.replace(/h/gu, ':').split('-').map((p: string) => p.trim());
+        if (parts.length === 2 && DAY_MAP[wh.day] !== undefined) {
+            const formatParts = (str: string) => {
+                const [h, m] = str.split(':');
+                return `${(h || '0').padStart(2, '0')}:${(m || '00').padStart(2, '0')}`;
+            };
+            acc.push({
+                daysOfWeek: [DAY_MAP[wh.day]],
+                startTime: formatParts(parts[0]),
+                endTime: formatParts(parts[1])
+            });
+        }
+    }
+    return acc;
+  }, []);
 
   // --- Handlers ---
   const handleManualAdd = () => {
@@ -354,6 +377,9 @@ export default function CalendarView({
             minute: '2-digit',
             hour12: false
           }}
+          businessHours={businessHours.length > 0 ? businessHours : undefined}
+          selectConstraint="businessHours"
+          eventConstraint="businessHours"
         />
       </div>
 
