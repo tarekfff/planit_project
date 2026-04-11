@@ -296,17 +296,19 @@ export function RegisterForm() {
           <form onSubmit={handleVerifySubmit} className="space-y-4">
             <div className="flex flex-col items-center justify-center pt-2 pb-4">
               <Label htmlFor="code" className="sr-only">Code de confirmation</Label>
-              <InputOTP maxLength={6} name="code" id="code">
+              <InputOTP maxLength={8} name="code" id="code">
                 <InputOTPGroup>
-                  <InputOTPSlot index={0} className="w-12 h-14 text-2xl" />
-                  <InputOTPSlot index={1} className="w-12 h-14 text-2xl" />
-                  <InputOTPSlot index={2} className="w-12 h-14 text-2xl" />
+                  <InputOTPSlot index={0} className="w-10 h-14 text-2xl" />
+                  <InputOTPSlot index={1} className="w-10 h-14 text-2xl" />
+                  <InputOTPSlot index={2} className="w-10 h-14 text-2xl" />
+                  <InputOTPSlot index={3} className="w-10 h-14 text-2xl" />
                 </InputOTPGroup>
                 <InputOTPSeparator />
                 <InputOTPGroup>
-                  <InputOTPSlot index={3} className="w-12 h-14 text-2xl" />
-                  <InputOTPSlot index={4} className="w-12 h-14 text-2xl" />
-                  <InputOTPSlot index={5} className="w-12 h-14 text-2xl" />
+                  <InputOTPSlot index={4} className="w-10 h-14 text-2xl" />
+                  <InputOTPSlot index={5} className="w-10 h-14 text-2xl" />
+                  <InputOTPSlot index={6} className="w-10 h-14 text-2xl" />
+                  <InputOTPSlot index={7} className="w-10 h-14 text-2xl" />
                 </InputOTPGroup>
               </InputOTP>
             </div>

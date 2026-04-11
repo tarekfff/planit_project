@@ -31,7 +31,7 @@ export const EstablishmentRegisterSchema = z.object({
 
 export const VerifyOtpSchema = z.object({
   email: z.string().email('Invalid email'),
-  code: z.string().min(6, 'Verification code must be at least 6 characters'),
+  code: z.string().min(6, 'Verification code must be at least 6 characters').max(8, 'Verification code is 8 characters'),
 })
 
 export const ResetPasswordRequestSchema = z.object({
@@ -40,7 +40,7 @@ export const ResetPasswordRequestSchema = z.object({
 
 export const ResetPasswordVerifySchema = z.object({
   email: z.string().email('Invalid email'),
-  code: z.string().min(6, 'Verification code must be at least 6 characters'),
+  code: z.string().min(6, 'Verification code must be at least 6 characters').max(8, 'Verification code is 8 characters'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 

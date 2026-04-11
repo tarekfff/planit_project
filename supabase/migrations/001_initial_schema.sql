@@ -1,7 +1,9 @@
 -- =================================================================
--- PLANIT — Complete Database Schema
+-- PLANIT — Complete Database Schema (Clean Reset)
 -- Stack: Supabase (PostgreSQL)
 -- Run this in: Supabase Dashboard > SQL Editor
+--
+-- ⚠️  STEP 0: Run the DROP script first to clean everything
 -- =================================================================
 
 
@@ -9,13 +11,17 @@
 -- 1. ENUMS
 -- =================================================================
 
-CREATE TYPE user_role AS ENUM ('admin', 'manager', 'professional', 'client');
-CREATE TYPE appointment_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed', 'no_show');
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('admin', 'manager', 'professional', 'client');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE appointment_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed', 'no_show');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 
 -- =================================================================
 -- 2. SHARED TRIGGER FUNCTION — auto-updates updated_at
--- Apply this to every table that needs it.
 -- =================================================================
 
 CREATE OR REPLACE FUNCTION handle_updated_at()
@@ -43,7 +49,6 @@ CREATE TABLE profiles (
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Trigger: keep updated_at fresh
 CREATE TRIGGER set_profiles_updated_at
   BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
@@ -52,13 +57,35 @@ CREATE TRIGGER set_profiles_updated_at
 -- The full_name and role are passed via signUp({ options: { data: { full_name, role } } })
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_role TEXT;
+  v_final_role user_role;
 BEGIN
-  INSERT INTO public.profiles (id, full_name, role)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', 'New User'),
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'client')
-  );
+  -- Extract role safely, default to 'client'
+  v_role := BTRIM(COALESCE(NEW.raw_user_meta_data->>'role', 'client'));
+  
+  -- Try to safely cast the role
+  BEGIN
+    v_final_role := v_role::user_role;
+  EXCEPTION WHEN OTHERS THEN
+    v_final_role := 'client'::user_role;
+  END;
+
+  -- Insert profile, catching any constraint violations
+  BEGIN
+    INSERT INTO public.profiles (id, full_name, role, phone)
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', 'New User'),
+      v_final_role,
+      NEW.raw_user_meta_data->>'phone'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    -- If it still fails, insert an absolutely minimal row to prevent crashing GoTrue
+    INSERT INTO public.profiles (id, full_name, role)
+    VALUES (NEW.id, 'Error Creating Profile', 'client'::user_role);
+  END;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -78,7 +105,7 @@ CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE TO authenticated
   USING (auth.uid() = id);
 
--- Create a secure function that bypasses RLS to check the exact role without causing infinite loops
+-- Secure role-check function (bypasses RLS to avoid infinite loops)
 CREATE OR REPLACE FUNCTION public.get_my_role()
 RETURNS user_role
 LANGUAGE plpgsql
@@ -92,7 +119,6 @@ BEGIN
 END;
 $$;
 
--- Admins can read all profiles (for admin dashboard)
 CREATE POLICY "Admins can read all profiles"
   ON profiles FOR SELECT TO authenticated
   USING (
@@ -110,7 +136,7 @@ CREATE TABLE establishments (
   name         TEXT NOT NULL,
   description  TEXT,
   address      TEXT,
-  wilaya       TEXT,           -- Algerian province (Alger, Oran, Constantine…)
+  wilaya       TEXT,
   phone        TEXT,
   logo_url     TEXT,
   is_active    BOOLEAN DEFAULT TRUE,
@@ -122,7 +148,6 @@ CREATE TRIGGER set_establishments_updated_at
   BEFORE UPDATE ON establishments
   FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 
--- Indexes for common queries
 CREATE INDEX idx_establishments_manager   ON establishments(manager_id);
 CREATE INDEX idx_establishments_wilaya    ON establishments(wilaya);
 CREATE INDEX idx_establishments_is_active ON establishments(is_active);
@@ -130,7 +155,6 @@ CREATE INDEX idx_establishments_is_active ON establishments(is_active);
 -- RLS
 ALTER TABLE establishments ENABLE ROW LEVEL SECURITY;
 
--- Anyone (even unauthenticated) can discover active establishments
 CREATE POLICY "Public can view active establishments"
   ON establishments FOR SELECT
   USING (is_active = TRUE);
@@ -154,20 +178,61 @@ CREATE POLICY "Admins have full access on establishments"
 
 
 -- =================================================================
+-- 4b. RPC: create_manager_establishment
+-- Called by the app after OTP verification or login.
+-- Uses SECURITY DEFINER to bypass RLS. Safe because it checks
+-- the caller's role internally. Idempotent (returns existing ID
+-- if establishment already exists).
+-- =================================================================
+
+CREATE OR REPLACE FUNCTION create_manager_establishment(
+  p_name TEXT,
+  p_wilaya TEXT DEFAULT 'Non défini',
+  p_phone TEXT DEFAULT '',
+  p_description TEXT DEFAULT ''
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_role user_role;
+  v_existing_id UUID;
+  v_new_id UUID;
+BEGIN
+  -- Check that the caller is a manager
+  SELECT role INTO v_role FROM profiles WHERE id = auth.uid();
+  IF v_role IS NULL OR v_role != 'manager' THEN
+    RAISE EXCEPTION 'Only managers can create establishments';
+  END IF;
+
+  -- Return existing establishment if one already exists (idempotent)
+  SELECT id INTO v_existing_id FROM establishments WHERE manager_id = auth.uid();
+  IF v_existing_id IS NOT NULL THEN
+    RETURN v_existing_id;
+  END IF;
+
+  -- Create the establishment
+  INSERT INTO establishments (manager_id, name, wilaya, phone, description)
+  VALUES (auth.uid(), p_name, p_wilaya, p_phone, p_description)
+  RETURNING id INTO v_new_id;
+
+  RETURN v_new_id;
+END;
+$$;
+
+
+-- =================================================================
 -- 5. PROFESSIONALS
 -- =================================================================
 
 CREATE TABLE professionals (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id          UUID REFERENCES profiles(id) ON DELETE SET NULL, -- optional login
+  user_id          UUID REFERENCES profiles(id) ON DELETE SET NULL,
   establishment_id UUID REFERENCES establishments(id) ON DELETE CASCADE NOT NULL,
   full_name        TEXT NOT NULL,
   bio              TEXT,
   avatar_url       TEXT,
-  -- working_hours format:
-  -- { "monday":    { "active": true,  "start": "08:00", "end": "17:00" },
-  --   "tuesday":   { "active": true,  "start": "08:00", "end": "17:00" },
-  --   "wednesday": { "active": false, "start": null,    "end": null    }, ... }
   working_hours    JSONB DEFAULT '{}',
   is_active        BOOLEAN DEFAULT TRUE,
   created_at       TIMESTAMPTZ DEFAULT NOW(),
@@ -181,14 +246,12 @@ CREATE TRIGGER set_professionals_updated_at
 CREATE INDEX idx_professionals_establishment ON professionals(establishment_id);
 CREATE INDEX idx_professionals_user_id       ON professionals(user_id);
 
--- RLS
 ALTER TABLE professionals ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public can view active professionals"
   ON professionals FOR SELECT
   USING (is_active = TRUE);
 
--- Managers manage all professionals inside their establishment
 CREATE POLICY "Managers can manage their professionals"
   ON professionals FOR ALL TO authenticated
   USING (
@@ -199,7 +262,6 @@ CREATE POLICY "Managers can manage their professionals"
     )
   );
 
--- A professional can update their own row (bio, avatar…)
 CREATE POLICY "Professionals can update own record"
   ON professionals FOR UPDATE TO authenticated
   USING (user_id = auth.uid());
@@ -229,7 +291,6 @@ CREATE TRIGGER set_services_updated_at
 CREATE INDEX idx_services_professional  ON services(professional_id);
 CREATE INDEX idx_services_establishment ON services(establishment_id);
 
--- RLS
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public can view active services"
@@ -260,8 +321,8 @@ CREATE TABLE appointments (
   start_time       TIMESTAMPTZ NOT NULL,
   end_time         TIMESTAMPTZ NOT NULL,
   status           appointment_status DEFAULT 'pending',
-  client_notes     TEXT,       -- visible to client + manager
-  internal_notes   TEXT,       -- visible to manager + professional only
+  client_notes     TEXT,
+  internal_notes   TEXT,
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW(),
 
@@ -277,16 +338,9 @@ CREATE INDEX idx_appointments_professional    ON appointments(professional_id);
 CREATE INDEX idx_appointments_establishment   ON appointments(establishment_id);
 CREATE INDEX idx_appointments_start_time      ON appointments(start_time);
 CREATE INDEX idx_appointments_status          ON appointments(status);
--- Composite: most common dashboard query
-CREATE INDEX idx_appointments_pro_start ON appointments(professional_id, start_time);
+CREATE INDEX idx_appointments_pro_start       ON appointments(professional_id, start_time);
 
--- -----------------------------------------------------------------
--- TRIGGER: Prevent double-booking
--- Runs BEFORE every INSERT or UPDATE. Raises an exception if the
--- professional already has a non-cancelled appointment overlapping
--- the requested time window.
--- -----------------------------------------------------------------
-
+-- Double-booking prevention trigger
 CREATE OR REPLACE FUNCTION check_appointment_overlap()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -294,7 +348,7 @@ BEGIN
     SELECT 1 FROM appointments
     WHERE professional_id = NEW.professional_id
       AND status NOT IN ('cancelled')
-      AND id != COALESCE(NEW.id, gen_random_uuid()) -- allow updating own row
+      AND id != COALESCE(NEW.id, gen_random_uuid())
       AND tstzrange(NEW.start_time, NEW.end_time, '[)')
           && tstzrange(start_time, end_time, '[)')
   ) THEN
@@ -311,12 +365,10 @@ CREATE TRIGGER prevent_double_booking
 -- RLS
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 
--- Clients: only their own bookings
 CREATE POLICY "Clients can view own appointments"
   ON appointments FOR SELECT TO authenticated
   USING (auth.uid() = client_id);
 
--- Professionals: all bookings assigned to them
 CREATE POLICY "Professionals can view their schedule"
   ON appointments FOR SELECT TO authenticated
   USING (
@@ -327,7 +379,6 @@ CREATE POLICY "Professionals can view their schedule"
     )
   );
 
--- Managers: all appointments in their establishment
 CREATE POLICY "Managers can view all appointments in their establishment"
   ON appointments FOR SELECT TO authenticated
   USING (
@@ -338,12 +389,10 @@ CREATE POLICY "Managers can view all appointments in their establishment"
     )
   );
 
--- Clients can create bookings for themselves only
 CREATE POLICY "Clients can book appointments"
   ON appointments FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = client_id);
 
--- Managers and professionals can book appointments on behalf of clients
 CREATE POLICY "Staff can create appointments"
   ON appointments FOR INSERT TO authenticated
   WITH CHECK (
@@ -358,13 +407,11 @@ CREATE POLICY "Staff can create appointments"
     )
   );
 
--- Clients can only cancel (not change times or professional)
 CREATE POLICY "Clients can cancel own appointments"
   ON appointments FOR UPDATE TO authenticated
   USING (auth.uid() = client_id)
   WITH CHECK (status = 'cancelled');
 
--- Managers and professionals can update status / internal notes
 CREATE POLICY "Staff can update appointment status"
   ON appointments FOR UPDATE TO authenticated
   USING (
@@ -382,8 +429,6 @@ CREATE POLICY "Staff can update appointment status"
 
 -- =================================================================
 -- 8. AVAILABILITY EXCEPTIONS
--- Represents days when a professional is unavailable
--- (holidays, sick leave, vacations).
 -- =================================================================
 
 CREATE TABLE availability_exceptions (
@@ -401,7 +446,6 @@ CREATE INDEX idx_availability_exceptions_date         ON availability_exceptions
 
 ALTER TABLE availability_exceptions ENABLE ROW LEVEL SECURITY;
 
--- Anyone can read exceptions (needed by the booking calendar)
 CREATE POLICY "Public can read availability exceptions"
   ON availability_exceptions FOR SELECT USING (TRUE);
 
