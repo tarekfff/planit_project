@@ -158,10 +158,16 @@ export async function getEstablishmentProfileData() {
     .select('*')
     .eq('establishment_id', establishment.id);
 
+  // Fetch all professional<->service links for this establishment
+  const { data: professionalServices } = await supabase
+    .from('professional_services')
+    .select('professional_id, service_id');
+
   return {
     user,
     establishment,
     professionals: professionals || [],
     services: services || [],
+    professionalServices: professionalServices || [],
   };
 }

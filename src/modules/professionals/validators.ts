@@ -20,7 +20,8 @@ export const addStaffSchema = z.object({
   phone: z.string().optional(),
   bio: z.string().optional(), // Used as "Spécialité"
   password: z.string().min(6, '6 caractères minimum').optional().or(z.literal('')),
-  is_active: z.union([z.boolean(), z.string()]).transform(v => v === 'true' || v === true).default(true)
+  is_active: z.union([z.boolean(), z.string()]).transform(v => v === 'true' || v === true).default(true),
+  service_ids: z.union([z.string(), z.array(z.string())]).optional().transform(v => Array.isArray(v) ? v : (v ? [v] : []))
 });
 
 export const editStaffSchema = z.object({
@@ -30,7 +31,8 @@ export const editStaffSchema = z.object({
   phone: z.string().optional(),
   bio: z.string().optional(),
   password: z.string().optional(), // only provided if changing
-  is_active: z.union([z.boolean(), z.string()]).transform(v => v === 'true' || v === true).default(true)
+  is_active: z.union([z.boolean(), z.string()]).transform(v => v === 'true' || v === true).default(true),
+  service_ids: z.union([z.string(), z.array(z.string())]).optional().transform(v => Array.isArray(v) ? v : (v ? [v] : []))
 });
 
 export type ProfessionalInput = z.infer<typeof professionalSchema>;

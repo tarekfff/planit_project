@@ -43,6 +43,7 @@ interface CalendarViewProps {
   services: Service[];
   establishmentId: string;
   workingHours?: any[];
+  currentProfessionalId?: string;
 }
 
 export default function CalendarView({
@@ -51,6 +52,7 @@ export default function CalendarView({
   services,
   establishmentId,
   workingHours = [],
+  currentProfessionalId,
 }: CalendarViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
@@ -64,17 +66,23 @@ export default function CalendarView({
   };
 
   // Map DB appointments → FullCalendar event objects
-  const mapEvents = (appointments: AppointmentEvent[]) => appointments.map(apt => ({
-    id: apt.id,
-    title: apt.professionals?.full_name || 'RDV',
-    start: apt.start_time,
-    end: apt.end_time,
-    extendedProps: {
-      status: apt.status,
-      serviceName: apt.services?.name,
-      professionalName: apt.professionals?.full_name,
-    },
-  }));
+  const mapEvents = (appointments: AppointmentEvent[]) => appointments.map(apt => {
+    const isMine = !currentProfessionalId || apt.professional_id === currentProfessionalId;
+    return {
+      id: apt.id,
+      title: apt.professionals?.full_name || 'RDV',
+      start: apt.start_time,
+      end: apt.end_time,
+      editable: isMine, // FullCalendar standard flag to prevent drag/drop for this specific event
+      extendedProps: {
+        status: apt.status,
+        serviceName: apt.services?.name,
+        professionalName: apt.professionals?.full_name,
+        isMine: isMine,
+        professionalId: apt.professional_id
+      },
+    };
+  });
 
   const [localEvents, setLocalEvents] = useState(() => mapEvents(initialAppointments));
 
@@ -84,7 +92,8 @@ export default function CalendarView({
     setLocalEvents(mapEvents(initialAppointments));
   }, [initialAppointments]);
 
-  const businessHours = workingHours.reduce((acc: any[], wh: any) => {
+  const safeWorkingHours = Array.isArray(workingHours) ? workingHours : [];
+  const businessHours = safeWorkingHours.reduce((acc: any[], wh: any) => {
     if (!wh.closed && wh.time && wh.time !== 'Fermé') {
         const DAY_MAP: Record<string, number> = {
             'Dimanche': 0, 'Lundi': 1, 'Mardi': 2, 'Mercredi': 3, 'Jeudi': 4, 'Vendredi': 5, 'Samedi': 6
@@ -120,6 +129,10 @@ export default function CalendarView({
   };
 
   const handleEventClick = (clickInfo: EventClickArg) => {
+    if (!clickInfo.event.extendedProps.isMine) {
+       showToast("Ce rendez-vous appartient à un autre professionnel.");
+       return;
+    }
     const apt = initialAppointments.find(a => a.id === clickInfo.event.id);
     if (apt) {
       setSelectedAppointment(apt);
@@ -173,12 +186,18 @@ export default function CalendarView({
   // Custom event card rendering
   const renderEventContent = (eventInfo: EventContentArg) => {
     const status = eventInfo.event.extendedProps.status || 'confirmed';
-    const colors = STATUS_COLORS[status] || STATUS_COLORS.confirmed;
+    const isMine = eventInfo.event.extendedProps.isMine;
+    
+    // Grey out if it's someone else's appointment
+    const colors = isMine 
+       ? (STATUS_COLORS[status] || STATUS_COLORS.confirmed)
+       : { bg: '#f3f4f6', border: '#9ca3af', text: '#6b7280' };
+
     const serviceName = eventInfo.event.extendedProps.serviceName;
 
     return (
       <div
-        className="h-full w-full px-2.5 py-1.5 overflow-hidden"
+        className={`h-full w-full px-2.5 py-1.5 overflow-hidden ${!isMine ? 'opacity-80' : ''}`}
         style={{
           background: colors.bg,
           borderLeft: `3px solid ${colors.border}`,
@@ -378,8 +397,8 @@ export default function CalendarView({
             hour12: false
           }}
           businessHours={businessHours.length > 0 ? businessHours : undefined}
-          selectConstraint="businessHours"
-          eventConstraint="businessHours"
+          selectConstraint={businessHours.length > 0 ? "businessHours" : undefined}
+          eventConstraint={businessHours.length > 0 ? "businessHours" : undefined}
         />
       </div>
 

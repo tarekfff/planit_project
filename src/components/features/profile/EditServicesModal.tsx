@@ -25,8 +25,7 @@ export function EditServicesModal({ services }: EditServicesModalProps) {
             if (result?.error) {
                 setError(result.error);
             } else {
-                // Clear form but keep modal open
-                (e.target as HTMLFormElement).reset();
+                setIsOpen(false);
             }
         } catch (err: any) {
             setError(err.message || 'Erreur');

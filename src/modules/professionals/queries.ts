@@ -23,3 +23,25 @@ export async function getProfessional(id: string) {
   if (error) return null;
   return data;
 }
+
+export async function getProfessionalServicesSettings() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: prof } = await supabase
+    .from('professionals')
+    .select('id, full_name, establishment_id, working_hours')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!prof) return null;
+
+  const { data: services } = await supabase
+    .from('services')
+    .select('*')
+    .eq('professional_id', prof.id)
+    .order('name');
+
+  return { professional: prof, services: services || [] };
+}

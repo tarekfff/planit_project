@@ -110,13 +110,17 @@ export async function addService(prevState: any, formData: FormData) {
     const { error } = await supabase
       .from('services')
       .insert({
-        ...result.data,
+        name: result.data.name,
+        duration_minutes: result.data.duration_minutes,
+        description: result.data.description,
+        is_active: result.data.is_active,
         establishment_id: est.id
       });
 
     if (error) throw error;
 
     revalidatePath('/dashboard/manager/professionals');
+    revalidatePath('/dashboard/manager/profile');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -151,14 +155,14 @@ export async function updateService(prevState: any, formData: FormData) {
         name: result.data.name,
         duration_minutes: result.data.duration_minutes,
         description: result.data.description,
-        is_active: result.data.is_active
+        is_active: result.data.is_active,
       })
       .eq('id', result.data.id)
       .eq('establishment_id', est.id);
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/manager/professionals');
+    revalidatePath('/dashboard/manager/profile');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };
@@ -187,7 +191,7 @@ export async function deleteService(serviceId: string) {
 
     if (error) throw error;
 
-    revalidatePath('/dashboard/manager/professionals');
+    revalidatePath('/dashboard/manager/profile');
     return { success: true };
   } catch (e: any) {
     return { success: false, error: e.message };

@@ -28,14 +28,16 @@ export async function createAppointment(prevState: any, formData: FormData) {
   if (!parsed.success) return { success: false, error: parsed.error.issues[0].message };
 
   try {
-    // Get establishment
-    const { data: est } = await supabase
-      .from('establishments')
-      .select('id')
-      .eq('manager_id', user.id)
-      .maybeSingle();
+    let estId = null;
+    const { data: est } = await supabase.from('establishments').select('id').eq('manager_id', user.id).maybeSingle();
+    if (est) {
+      estId = est.id;
+    } else {
+      const { data: prof } = await supabase.from('professionals').select('establishment_id').eq('user_id', user.id).maybeSingle();
+      if (prof) estId = prof.establishment_id;
+    }
 
-    if (!est) throw new Error('Établissement introuvable');
+    if (!estId) throw new Error('Établissement introuvable');
 
     // Find or create a "walk-in" client profile for manager-created appointments
     // For now, use the manager's own ID as client_id (the manager books on behalf)
@@ -45,7 +47,7 @@ export async function createAppointment(prevState: any, formData: FormData) {
     const { error } = await supabase
       .from('appointments')
       .insert({
-        establishment_id: est.id,
+        establishment_id: estId,
         professional_id: parsed.data.professional_id,
         service_id: parsed.data.service_id || null,
         client_id: clientId,
@@ -86,13 +88,16 @@ export async function updateAppointment(prevState: any, formData: FormData) {
   if (!parsed.success) return { success: false, error: parsed.error.issues[0].message };
 
   try {
-    const { data: est } = await supabase
-      .from('establishments')
-      .select('id')
-      .eq('manager_id', user.id)
-      .maybeSingle();
+    let estId = null;
+    const { data: est } = await supabase.from('establishments').select('id').eq('manager_id', user.id).maybeSingle();
+    if (est) {
+      estId = est.id;
+    } else {
+      const { data: prof } = await supabase.from('professionals').select('establishment_id').eq('user_id', user.id).maybeSingle();
+      if (prof) estId = prof.establishment_id;
+    }
 
-    if (!est) throw new Error('Établissement introuvable');
+    if (!estId) throw new Error('Établissement introuvable');
 
     const { error } = await supabase
       .from('appointments')
@@ -106,7 +111,7 @@ export async function updateAppointment(prevState: any, formData: FormData) {
         internal_notes: parsed.data.internal_notes || null,
       })
       .eq('id', id)
-      .eq('establishment_id', est.id);
+      .eq('establishment_id', estId);
 
     if (error) {
       if (error.message.includes('double_booking')) {
@@ -131,19 +136,22 @@ export async function moveAppointment(id: string, start_time: string, end_time: 
   if (!user) return { success: false, error: 'Non autorisé' };
 
   try {
-    const { data: est } = await supabase
-      .from('establishments')
-      .select('id')
-      .eq('manager_id', user.id)
-      .maybeSingle();
+    let estId = null;
+    const { data: est } = await supabase.from('establishments').select('id').eq('manager_id', user.id).maybeSingle();
+    if (est) {
+      estId = est.id;
+    } else {
+      const { data: prof } = await supabase.from('professionals').select('establishment_id').eq('user_id', user.id).maybeSingle();
+      if (prof) estId = prof.establishment_id;
+    }
 
-    if (!est) throw new Error('Établissement introuvable');
+    if (!estId) throw new Error('Établissement introuvable');
 
     const { error } = await supabase
       .from('appointments')
       .update({ start_time, end_time })
       .eq('id', id)
-      .eq('establishment_id', est.id);
+      .eq('establishment_id', estId);
 
     if (error) {
       if (error.message.includes('double_booking')) {
@@ -168,20 +176,23 @@ export async function deleteAppointment(id: string) {
   if (!user) return { success: false, error: 'Non autorisé' };
 
   try {
-    const { data: est } = await supabase
-      .from('establishments')
-      .select('id')
-      .eq('manager_id', user.id)
-      .maybeSingle();
+    let estId = null;
+    const { data: est } = await supabase.from('establishments').select('id').eq('manager_id', user.id).maybeSingle();
+    if (est) {
+      estId = est.id;
+    } else {
+      const { data: prof } = await supabase.from('professionals').select('establishment_id').eq('user_id', user.id).maybeSingle();
+      if (prof) estId = prof.establishment_id;
+    }
 
-    if (!est) throw new Error('Établissement introuvable');
+    if (!estId) throw new Error('Établissement introuvable');
 
     // Soft-delete: set status to cancelled
     const { error } = await supabase
       .from('appointments')
       .update({ status: 'cancelled' })
       .eq('id', id)
-      .eq('establishment_id', est.id);
+      .eq('establishment_id', estId);
 
     if (error) throw error;
 

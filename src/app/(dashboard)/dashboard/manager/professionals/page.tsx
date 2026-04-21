@@ -14,7 +14,8 @@ export default async function ManagerProfessionalsPage() {
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <ManageProfessionals 
         initialProfessionals={data.professionals} 
-        services={data.services} 
+        services={data.services}
+        professionalServices={data.professionalServices}
       />
     </div>
   );

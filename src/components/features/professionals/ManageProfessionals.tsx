@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useActionState } from 'react';
-import { addProfessionalStaff, editProfessionalStaff } from '@/modules/professionals/actions';
+import { useState, useActionState, useTransition } from 'react';
+import { addProfessionalStaff, editProfessionalStaff, deleteProfessionalStaff } from '@/modules/professionals/actions';
 import { addService, updateService } from '@/modules/establishments/actions';
 import { Modal } from '@/components/ui/modal';
 
@@ -15,19 +15,25 @@ type Professional = {
 
 type Service = {
   id: string;
-  professional_id?: string;
   name: string;
   duration_minutes: number;
   description?: string;
   is_active: boolean;
 };
 
+type ProfessionalService = {
+  professional_id: string;
+  service_id: string;
+};
+
 export default function ManageProfessionals({ 
   initialProfessionals,
-  services 
+  services,
+  professionalServices,
 }: { 
   initialProfessionals: Professional[];
   services: Service[];
+  professionalServices: ProfessionalService[];
 }) {
   const [activeTab, setActiveTab] = useState<'professionals' | 'services'>('professionals');
 
@@ -42,6 +48,7 @@ export default function ManageProfessionals({
   });
   const [addProState, addProAction, isAddingPro] = useActionState(addProfessionalStaff, { success: false });
   const [editProState, editProAction, isEditingPro] = useActionState(editProfessionalStaff, { success: false });
+  const [isPendingDelete, startDeleteTransition] = useTransition();
 
   if (addProState.success && isAddProMenuOpen) {
     setIsAddProMenuOpen(false);
@@ -132,12 +139,26 @@ export default function ManageProfessionals({
                   </span>
                 </div>
                 
-                <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+                <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between gap-2">
                   <button
                     onClick={() => setEditingPro(pro)}
-                    className="text-purple-600 hover:text-purple-700 font-medium text-sm w-full py-2 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                    className="text-purple-600 hover:text-purple-700 font-medium text-sm flex-1 py-2 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
                   >
                     Voir détails
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Voulez-vous vraiment supprimer ce professionnel ? Ce compte et toutes ses données associées seront supprimés.')) {
+                        startDeleteTransition(() => {
+                           deleteProfessionalStaff(pro.id);
+                        });
+                      }
+                    }}
+                    disabled={isPendingDelete}
+                    title="Supprimer"
+                    className="text-red-500 hover:text-red-600 p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    Supprimer
                   </button>
                 </div>
               </div>
@@ -261,6 +282,33 @@ export default function ManageProfessionals({
                 </div>
               </div>
 
+              <div className="pt-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Assigner des Services (Optionnel)</label>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 max-h-48 overflow-y-auto">
+                  {services.length > 0 ? (
+                    <div className="space-y-3">
+                      {services.map(service => (
+                        <label key={service.id} className="flex items-start gap-3 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            name="service_ids" 
+                            value={service.id} 
+                            className="w-4 h-4 mt-0.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600"
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{service.name}</p>
+                            <p className="text-xs text-gray-500">{service.duration_minutes} min</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">Aucun service disponible.</p>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Un même service peut être assigné à plusieurs professionnels.</p>
+              </div>
+
               <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 shrink-0">
                 <button type="button" onClick={() => setIsAddProMenuOpen(false)} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-100 rounded-xl transition-colors">
                   Annuler
@@ -327,21 +375,36 @@ export default function ManageProfessionals({
               </div>
 
               <div className="pt-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Services</label>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  {services.filter(s => s.professional_id === editingPro.id).length > 0 ? (
-                    <ul className="space-y-2">
-                      {services.filter(s => s.professional_id === editingPro.id).map(service => (
-                        <li key={service.id} className="flex items-center gap-2 text-sm text-gray-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                          {service.name}
-                        </li>
-                      ))}
-                    </ul>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Services assignés</label>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 max-h-48 overflow-y-auto">
+                  {services.length > 0 ? (
+                    <div className="space-y-3">
+                      {services.map(service => {
+                        const isAssignedToHim = professionalServices.some(
+                          ps => ps.professional_id === editingPro.id && ps.service_id === service.id
+                        );
+                        return (
+                          <label key={service.id} className="flex items-start gap-3 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              name="service_ids" 
+                              value={service.id} 
+                              defaultChecked={isAssignedToHim}
+                              className="w-4 h-4 mt-0.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600"
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{service.name}</p>
+                              <p className="text-xs text-gray-500">{service.duration_minutes} min</p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
                   ) : (
-                    <p className="text-sm text-gray-500 italic">Aucun service assigné.</p>
+                    <p className="text-sm text-gray-500 italic">Aucun service disponible.</p>
                   )}
                 </div>
+                <p className="text-xs text-gray-500 mt-1">Un même service peut être assigné à plusieurs professionnels.</p>
               </div>
 
               <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 shrink-0">
