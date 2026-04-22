@@ -56,70 +56,114 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* ═══════════════════ HERO ═══════════════════ */}
-      <section id="accueil" className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text */}
-            <div className="space-y-6">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
-                Gérez vos rendez-vous,{' '}
-                <span className="text-primary">simplement</span> et{' '}
-                <span className="text-primary">intelligemment</span>
-              </h1>
-              <p className="text-lg text-gray-600 max-w-lg">
-                Planit connecte vos clients à vos professionnels en toute simplicité
-              </p>
 
-              {/* Feature bullets */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center shadow-sm">1</span>
-                  <span className="text-sm font-medium text-gray-700">Réservation Intelligente</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center shadow-sm">2</span>
-                  <span className="text-sm font-medium text-gray-700">Votre Temps est Précieux</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center shadow-sm">3</span>
-                  <span className="text-sm font-medium text-gray-700">Toujours Informé</span>
-                </div>
+
+
+{/* ═══════════════════ HERO - VERSION AMÉLIORÉE ═══════════════════ */}
+<section id="accueil" className="relative overflow-hidden bg-gradient-to-br from-white via-white to-blue-50/30 pt-8 pb-16 lg:pt-12 lg:pb-24">
+  
+  {/* Blob décoratif (forme organique) */}
+  <div className="absolute top-0 right-0 w-full lg:w-3/5 h-full pointer-events-none z-0">
+    <div className="relative w-full h-full">
+      <Image
+        src="/hero-blob.svg"
+        alt=""
+        fill
+        className="object-cover object-right-top opacity-90"
+        priority
+      />
+    </div>
+  </div>
+
+  {/* Contenu principal */}
+  <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col lg:flex-row lg:items-center gap-12 lg:gap-8">
+      
+      {/* Bloc texte gauche */}
+      <div className="flex-1 lg:max-w-xl xl:max-w-2xl">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight text-gray-900">
+          Gérez vos rendez-vous,<br />
+          simplement et intelligemment
+        </h1>
+        <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-lg">
+          Planit connecte vos clients à vos professionnels en toute simplicité
+        </p>
+        
+        {/* Boutons CTA */}
+        <div className="flex flex-wrap gap-4 mt-8">
+          <Link
+            href="/register"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold bg-[#40BDFB] text-white hover:bg-[#34a4db] transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-105 active:scale-95"
+          >
+            Commencer gratuitement
+          </Link>
+          <a
+            href="#fonctionnalites"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold border-2 border-gray-200 bg-white/80 backdrop-blur-sm text-gray-700 hover:border-[#40BDFB] hover:bg-white hover:text-[#40BDFB] transition-all hover:scale-105 active:scale-95"
+          >
+            En savoir plus
+          </a>
+        </div>
+      </div>
+
+      {/* Bloc illustration + cartes flottantes (côté droit) */}
+      <div className="flex-1 relative flex justify-center lg:justify-end">
+        <div className="relative w-full max-w-[550px] lg:max-w-[650px] xl:max-w-[750px] min-h-[450px] lg:min-h-[550px]">
+          
+          {/* CARTES FLOTTANTES (alignées à gauche de l'illustration) */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-4 sm:gap-5">
+            {/* Carte 1 - Réservation Intelligente */}
+            <div className="group bg-white rounded-2xl sm:rounded-3xl py-3 sm:py-4 px-4 sm:px-6 pr-6 sm:pr-10 shadow-xl shadow-gray-200/50 border border-gray-100 flex items-center gap-4 hover:-translate-y-1 transition-all duration-300 cursor-default backdrop-blur-sm bg-white/95">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#40BDFB] text-white text-base sm:text-lg font-bold flex items-center justify-center shadow-md shadow-blue-500/30">
+                1
               </div>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center px-6 py-3 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-[var(--planit-cyan-dark)] transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Commencer gratuitement
-                </Link>
-                <a
-                  href="#fonctionnalites"
-                  className="inline-flex items-center px-6 py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-700 hover:border-primary hover:text-primary transition-all hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  En savoir plus
-                </a>
+              <div>
+                <p className="text-sm sm:text-base font-bold text-gray-900">Réservation</p>
+                <p className="text-xs sm:text-sm text-gray-500 -mt-0.5">Intelligente</p>
               </div>
             </div>
 
-            {/* Right: Hero Illustration */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-md">
-                <Image
-                  src="/hero-illustration.png"
-                  alt="Planit - Gestion de rendez-vous"
-                  width={500}
-                  height={500}
-                  className="object-contain"
-                  priority
-                />
+            {/* Carte 2 - Votre Temps est Précieux (décalée) */}
+            <div className="group bg-white rounded-2xl sm:rounded-3xl py-3 sm:py-4 px-4 sm:px-6 pr-6 sm:pr-10 shadow-xl shadow-gray-200/50 border border-gray-100 flex items-center gap-4 hover:-translate-y-1 transition-all duration-300 cursor-default backdrop-blur-sm bg-white/95 translate-x-6 sm:translate-x-8 lg:translate-x-12">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#40BDFB] text-white text-base sm:text-lg font-bold flex items-center justify-center shadow-md shadow-blue-500/30">
+                2
+              </div>
+              <div>
+                <p className="text-sm sm:text-base font-bold text-gray-900">Votre Temps</p>
+                <p className="text-xs sm:text-sm text-gray-500 -mt-0.5">est Précieux</p>
+              </div>
+            </div>
+
+            {/* Carte 3 - Toujours Informé (décalée encore plus) */}
+            <div className="group bg-white rounded-2xl sm:rounded-3xl py-3 sm:py-4 px-4 sm:px-6 pr-6 sm:pr-10 shadow-xl shadow-gray-200/50 border border-gray-100 flex items-center gap-4 hover:-translate-y-1 transition-all duration-300 cursor-default backdrop-blur-sm bg-white/95 translate-x-12 sm:translate-x-16 lg:translate-x-24">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#40BDFB] text-white text-base sm:text-lg font-bold flex items-center justify-center shadow-md shadow-blue-500/30">
+                3
+              </div>
+              <div>
+                <p className="text-sm sm:text-base font-bold text-gray-900">Toujours</p>
+                <p className="text-xs sm:text-sm text-gray-500 -mt-0.5">Informé</p>
               </div>
             </div>
           </div>
+
+          {/* Illustration principale (jeune femme avec tablette/calendrier) */}
+          <div className="relative w-full h-full min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
+            <Image
+              src="/new-hero-illustration.png"
+              alt="Planit - Gestion de rendez-vous simplifiée"
+              fill
+              className="object-contain object-right-bottom drop-shadow-2xl"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 
       {/* ═══════════════════ FONCTIONNALITÉS ═══════════════════ */}
       <section id="fonctionnalites" className="py-20 bg-white">

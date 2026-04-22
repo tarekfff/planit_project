@@ -392,3 +392,69 @@ export async function getProfessionalAppointments() {
   };
 }
 
+export async function getClientDashboardData() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  const defaultProfile = { full_name: 'Client', role: 'client' };
+  
+  if (!user) {
+    return { 
+      profile: defaultProfile, 
+      upcomingAppointments: [], 
+      pastAppointments: [], 
+      thisMonthAppointmentsCount: 0 
+    };
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  const { data: allAppointmentsRaw } = await supabase
+    .from('appointments')
+    .select(`
+      id, start_time, end_time, status, client_notes,
+      service:services(name, price, duration_minutes),
+      professional:professionals(full_name, avatar_url),
+      establishment:establishments(name, address, wilaya)
+    `)
+    .eq('client_id', user.id)
+    .order('start_time', { ascending: true });
+
+  const allAppointments = allAppointmentsRaw || [];
+  const now = new Date();
+  
+  // Filter for next appointments (future or today but not passed)
+  const upcomingAppointments = allAppointments.filter((apt: any) => {
+    return new Date(apt.start_time) >= now && apt.status !== 'cancelled';
+  });
+
+  // Past appointments
+  const pastAppointments = allAppointments.filter((apt: any) => {
+     return new Date(apt.start_time) < now && apt.status !== 'cancelled';
+  });
+  
+  const thisMonthAppointmentsCount = allAppointments.filter((apt: any) => {
+    const aptDate = new Date(apt.start_time);
+    return aptDate.getMonth() === now.getMonth() && aptDate.getFullYear() === now.getFullYear();
+  }).length;
+
+  const { data: featuredEstablishments } = await supabase
+    .from('establishments')
+    .select(`
+      id, name, wilaya, description, logo_url,
+      services:services(id, name, price, duration_minutes)
+    `)
+    .limit(4);
+
+  return {
+    profile: profile || defaultProfile,
+    upcomingAppointments,
+    pastAppointments,
+    thisMonthAppointmentsCount,
+    featuredEstablishments: featuredEstablishments || []
+  };
+}

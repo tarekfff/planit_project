@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
   if (userError?.code === 'session_not_found' || userError?.code === 'refresh_token_not_found') {
     // Session is gone — let the user re-authenticate.
     // We don't redirect here for public pages, only for protected routes.
-    if (path.startsWith('/dashboard')) {
+    if (path.startsWith('/dashboard') || path.startsWith('/client') || path.startsWith('/search')) {
       const loginUrl = new URL(ROUTES.auth.login, request.url)
       loginUrl.searchParams.set('reason', 'session_expired')
       return NextResponse.redirect(loginUrl)
@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
   // ── 3. Protect dashboard routes ──
   const isServerAction = request.headers.has('next-action')
 
-  if (!user && path.startsWith('/dashboard')) {
+  if (!user && (path.startsWith('/dashboard') || path.startsWith('/client') || path.startsWith('/search'))) {
     // Skip redirecting server actions — they're AJAX and a redirect causes
     // "Unexpected response" errors on the client.
     if (isServerAction) {
@@ -65,9 +65,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── 5. Role-based access control ──
-  // Only runs when we have a confirmed user AND we're inside /dashboard.
+  // Only runs when we have a confirmed user AND we're inside protected routes.
   // Reuses the SAME Supabase client (no second token refresh).
-  if (user && path.startsWith('/dashboard')) {
+  if (user && (path.startsWith('/dashboard') || path.startsWith('/client') || path.startsWith('/search'))) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -90,6 +90,9 @@ export async function middleware(request: NextRequest) {
         path.startsWith('/dashboard/professional') &&
         !['professional', 'manager', 'admin'].includes(role)
       ) {
+        return redirectWithCookies(new URL('/dashboard', request.url), getResponse())
+      }
+      if (path.startsWith('/client') && role !== 'client') {
         return redirectWithCookies(new URL('/dashboard', request.url), getResponse())
       }
     }

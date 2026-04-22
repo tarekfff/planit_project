@@ -20,6 +20,10 @@ export default async function DashboardRoutingHub() {
   // Fallback to client routing if the profile failed to load or role is missing
   const role = profile?.role || 'client'
 
-  // Execute dynamic bounce
-  redirect(`/dashboard/${role}`)
+  if (role === 'client') {
+    redirect('/client')
+  } else {
+    // Execute dynamic bounce
+    redirect(`/dashboard/${role}`)
+  }
 }

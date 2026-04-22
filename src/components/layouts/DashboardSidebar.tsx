@@ -22,10 +22,10 @@ import { logout } from '@/modules/auth/actions';
 
 const SIDEBAR_CONFIG = {
     client: [
-        { icon: Home, label: 'Home', href: '/dashboard/client' },
+        { icon: Home, label: 'Home', href: '/client' },
         { icon: Search, label: 'Search', href: '/search' },
-        { icon: Calendar, label: 'My Appointments', href: '/dashboard/client/appointments' },
-        { icon: Bell, label: 'Notifications', href: '/dashboard/client/notifications' },
+        { icon: Calendar, label: 'My Appointments', href: '/client/appointments' },
+        { icon: Bell, label: 'Notifications', href: '/client/notifications' },
     ],
     professional: [
         { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard/professional' },
@@ -56,7 +56,7 @@ export function DashboardSidebar({ role = 'client', establishmentName = 'Planit'
     const accountHref = 
       role === 'professional' ? '/dashboard/professional/account' :
       role === 'manager' ? '/dashboard/manager/account' :
-      '/dashboard/client/account';
+      '/client/account';
 
     return (
         <aside className="w-64 h-screen bg-gray-50/30 border-r border-gray-200 flex flex-col sticky top-0 overflow-y-auto">
@@ -90,7 +90,7 @@ export function DashboardSidebar({ role = 'client', establishmentName = 'Planit'
             {/* Navigation section */}
             <nav className="flex-1 py-4 bg-white">
                 {items.map((item) => {
-                    const isBaseRoute = ['/dashboard/manager', '/dashboard/client', '/dashboard/professional'].includes(item.href);
+                    const isBaseRoute = ['/dashboard/manager', '/client', '/dashboard/professional'].includes(item.href);
                     const isActive = pathname === item.href || (!isBaseRoute && pathname.startsWith(item.href + '/'));
                     const Icon = item.icon;
 

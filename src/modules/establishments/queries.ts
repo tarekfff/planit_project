@@ -12,6 +12,36 @@ export async function getEstablishmentsByWilaya(wilaya: string) {
   return data;
 }
 
+export async function searchEstablishments(searchQuery?: string, wilaya?: string) {
+  const supabase = await createClient();
+  
+  let query = supabase
+    .from('establishments')
+    .select(`
+      id, name, description, address, wilaya, logo_url,
+      services:services(id, name, price)
+    `);
+  
+  if (searchQuery?.trim()) {
+    query = query.ilike('name', `%${searchQuery}%`);
+  }
+  if (wilaya && wilaya !== '') {
+    query = query.eq('wilaya', wilaya);
+  }
+
+  const { data, error } = await query;
+  if (error) return [];
+  return data;
+}
+
+export async function getAllWilayas() {
+  const supabase = await createClient();
+  const { data } = await supabase.from('establishments').select('wilaya');
+  if (!data) return [];
+  const unique = Array.from(new Set(data.map(d => d.wilaya).filter(Boolean)));
+  return unique as string[];
+}
+
 export async function getById(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
