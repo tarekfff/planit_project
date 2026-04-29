@@ -202,3 +202,44 @@ export async function deleteAppointment(id: string) {
     return { success: false, error: e.message };
   }
 }
+
+/**
+ * Create a new appointment requested by a client
+ */
+export async function createClientAppointment(prevState: any, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Vous devez être connecté.' };
+
+  const raw = Object.fromEntries(formData);
+  const estId = raw.establishment_id as string;
+  if (!estId) return { success: false, error: 'Établissement manquant' };
+  
+  try {
+    const { error } = await supabase
+      .from('appointments')
+      .insert({
+        establishment_id: estId,
+        professional_id: raw.professional_id as string,
+        service_id: raw.service_id as string || null,
+        client_id: user.id,
+        start_time: raw.start_time as string,
+        end_time: raw.end_time as string,
+        status: 'pending',
+        client_notes: raw.client_notes as string || null,
+      });
+
+    if (error) {
+      if (error.message.includes('double_booking')) {
+        return { success: false, error: 'Ce créneau est déjà réservé.' };
+      }
+      throw error;
+    }
+
+    revalidatePath('/client/appointments');
+    revalidatePath('/dashboard/manager/calendar');
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
