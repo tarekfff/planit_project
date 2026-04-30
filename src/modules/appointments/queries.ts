@@ -62,7 +62,7 @@ export async function getManagerAppointments() {
     professionals: professionals || [],
     services: services || [],
     establishmentId: est.id,
-    workingHours: est.working_hours || [],
+    workingHours: (est.working_hours as any[]) || [],
   };
 }
 
@@ -297,18 +297,18 @@ export async function getProfessionalAppointments() {
 
   // Services available to this professional via junction table OR general (no assignments)
   // Step 1: Get service IDs assigned to ME
-  const { data: myLinks } = await supabase
+  const { data: myLinks } = await (supabase as any)
     .from('professional_services')
     .select('service_id')
     .eq('professional_id', prof.id);
 
   // Step 2: Get ALL service IDs that have ANY professional link (to identify general services)
-  const { data: allLinks } = await supabase
+  const { data: allLinks } = await (supabase as any)
     .from('professional_services')
     .select('service_id');
 
-  const myServiceIds = new Set((myLinks || []).map(l => l.service_id));
-  const assignedServiceIds = new Set((allLinks || []).map(l => l.service_id));
+  const myServiceIds = new Set((myLinks || []).map((l: any) => l.service_id));
+  const assignedServiceIds = new Set((allLinks || []).map((l: any) => l.service_id));
 
   // Step 3: Fetch all services for the establishment
   const { data: allServicesRaw } = await supabase
@@ -389,7 +389,7 @@ export async function getProfessionalAppointments() {
     professionals: [{ id: prof.id, full_name: prof.full_name }],
     services: services || [],
     establishmentId: prof.establishment_id,
-    workingHours: prof.working_hours || [],
+    workingHours: (prof.working_hours as any[]) || [],
     currentProfessionalId: prof.id,
   };
 }

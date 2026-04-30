@@ -19,7 +19,7 @@ interface CreateNotificationParams {
  */
 export async function createNotification(data: CreateNotificationParams) {
   // Use admin client to bypass RLS since users cannot insert notifications for others via regular client
-  const { error } = await supabaseAdmin.from('notifications').insert({
+  const { error } = await (supabaseAdmin as any).from('notifications').insert({
     user_id: data.userId,
     type: data.type,
     title: data.title,
@@ -40,7 +40,7 @@ export async function markAllNotificationsAsRead() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Non autorisé' };
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('notifications')
     .update({ is_read: true })
     .eq('user_id', user.id)
@@ -61,7 +61,7 @@ export async function markNotificationAsRead(notificationId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false };
 
-  await supabase
+  await (supabase as any)
     .from('notifications')
     .update({ is_read: true })
     .eq('id', notificationId)

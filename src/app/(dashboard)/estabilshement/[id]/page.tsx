@@ -19,6 +19,8 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
     return notFound();
   }
 
+  const establishment = est as any;
+
   // 2. Fetch Professionals
   const { data: professionals } = await supabase
     .from('professionals')
@@ -43,10 +45,10 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
       
       {/* Establishment Banner */}
       <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white dark:border-gray-800">
-        {est.banner_url ? (
+        {establishment.banner_url ? (
           <img 
-            src={est.banner_url} 
-            alt={`${est.name} banner`} 
+            src={establishment.banner_url} 
+            alt={`${establishment.name} banner`} 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
           />
         ) : (
@@ -59,7 +61,7 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
              </div>
              <div className="relative z-10 text-white/40 flex flex-col items-center gap-3">
                 <Star className="w-16 h-16 opacity-30" />
-                <span className="text-sm font-bold tracking-widest uppercase opacity-50">Bienvenue chez {est.name}</span>
+                <span className="text-sm font-bold tracking-widest uppercase opacity-50">Bienvenue chez {establishment.name}</span>
              </div>
           </div>
         )}
@@ -69,8 +71,8 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
       {/* Header Profile */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-700/50 flex flex-col md:flex-row gap-8 items-start relative overflow-hidden -mt-20 mx-4 md:mx-8 z-20 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
         <div className="w-32 h-32 bg-gray-50 dark:bg-gray-900 rounded-3xl flex items-center justify-center flex-shrink-0 shadow-xl border-4 border-white dark:border-gray-800 overflow-hidden z-10 transform -rotate-2 hover:rotate-0 transition-transform">
-          {est.logo_url ? (
-            <img src={est.logo_url} alt={est.name} className="w-full h-full object-cover" />
+          {establishment.logo_url ? (
+            <img src={establishment.logo_url} alt={establishment.name} className="w-full h-full object-cover" />
           ) : (
             <span className="text-5xl">🏬</span>
           )}
@@ -79,13 +81,13 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
           <div className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-bold mb-4 shadow-sm border border-green-100">
             <Star className="w-4 h-4 fill-current" /> 4.9 (128 avis)
           </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">{est.name}</h1>
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">{establishment.name}</h1>
           <p className="flex items-center gap-2 text-gray-500 font-medium text-lg mb-4">
             <MapPin className="w-5 h-5 text-indigo-400" />
-            {est.address || 'Adresse non spécifiée'}, {est.wilaya}
+            {establishment.address || 'Adresse non spécifiée'}, {establishment.wilaya}
           </p>
           <p className="text-gray-600 leading-relaxed max-w-2xl text-lg">
-            {est.description || "Aucune description fournie."}
+            {establishment.description || "Aucune description fournie."}
           </p>
         </div>
         
@@ -154,7 +156,7 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
              establishmentId={id} 
              professionals={professionals || []} 
              services={services || []} 
-             workingHours={est.working_hours || []}
+             workingHours={establishment.working_hours || []}
            />
            
            {/* Working Hours Info */}
@@ -163,8 +165,8 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
                 <Clock className="w-5 h-5 text-gray-400"/> Horaires d'ouverture officiels
               </h3>
               <div className="space-y-2 text-sm">
-                 {est.working_hours ? (
-                   Array.isArray(est.working_hours) ? est.working_hours.map((wh: any, i: number) => (
+                 {establishment.working_hours ? (
+                   Array.isArray(establishment.working_hours) ? establishment.working_hours.map((wh: any, i: number) => (
                      <div key={i} className="flex justify-between py-1 border-b border-gray-50 last:border-0">
                        <span className="text-gray-600 font-medium capitalize">{wh.day}</span>
                         <span className="font-bold text-gray-900">{wh.closed ? 'Fermé' : (wh.time || (wh.open && wh.close ? `${wh.open} - ${wh.close}` : '-'))}</span>

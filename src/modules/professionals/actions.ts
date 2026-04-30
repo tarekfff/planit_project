@@ -10,7 +10,12 @@ export async function createProfessional(data: ProfessionalInput) {
   const supabase = await createClient();
   const { data: professional, error } = await supabase
     .from('professionals')
-    .insert([result.data])
+    .insert([{
+      user_id: result.data.userId,
+      establishment_id: result.data.establishmentId,
+      full_name: result.data.title,
+      bio: result.data.bio,
+    }])
     .select();
 
   if (error) return { error: error.message };
@@ -22,9 +27,14 @@ export async function updateWorkingHours(data: WorkingHoursInput) {
   if (!result.success) return { error: 'Invalid input' };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('working_hours')
-    .upsert([result.data]);
+    .upsert([{
+      professional_id: result.data.professionalId,
+      day_of_week: result.data.dayOfWeek,
+      start_time: result.data.startTime,
+      end_time: result.data.endTime,
+    }]);
 
   if (error) return { error: error.message };
   return { success: true };
@@ -116,7 +126,7 @@ export async function addProfessionalStaff(prevState: any, formData: FormData) {
           process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
         const rows = parsed.data.service_ids.map(sid => ({ professional_id: newProf.id, service_id: sid }));
-        await adminSupabase.from('professional_services').insert(rows);
+        await (adminSupabase as any).from('professional_services').insert(rows);
     }
   }
 
@@ -152,12 +162,12 @@ export async function editProfessionalStaff(prevState: any, formData: FormData) 
       );
 
       // Remove previous assignments for this professional
-      await adminSupabase.from('professional_services').delete().eq('professional_id', id);
+      await (adminSupabase as any).from('professional_services').delete().eq('professional_id', id);
 
       // Re-assign newly selected ones
       if (parsed.data.service_ids && parsed.data.service_ids.length > 0) {
         const rows = parsed.data.service_ids.map(sid => ({ professional_id: id, service_id: sid }));
-        await adminSupabase.from('professional_services').insert(rows);
+        await (adminSupabase as any).from('professional_services').insert(rows);
       }
   }
 
@@ -273,7 +283,7 @@ export async function addProfessionalSpecificService(prevState: any, formData: F
     .single();
 
   if (newService) {
-    await adminSupabase.from('professional_services').insert({
+    await (adminSupabase as any).from('professional_services').insert({
       professional_id: prof.id,
       service_id: newService.id
     });
@@ -337,7 +347,7 @@ export async function deleteProfessionalSpecificService(id: string) {
   );
 
   // Delete the link in junction table, then delete the service itself
-  await adminSupabase.from('professional_services').delete().eq('service_id', id).eq('professional_id', prof.id);
+  await (adminSupabase as any).from('professional_services').delete().eq('service_id', id).eq('professional_id', prof.id);
   const { error } = await adminSupabase.from('services').delete().eq('id', id);
   if (error) return { success: false, error: error.message };
 

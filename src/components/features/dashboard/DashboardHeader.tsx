@@ -5,7 +5,7 @@ import { NotificationBell } from '@/components/ui/NotificationBell';
 
 interface DashboardHeaderProps {
   establishmentName?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   /** Which notifications page to link to from the bell dropdown */
   notificationsPageHref?: string;
 }

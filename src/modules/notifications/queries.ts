@@ -22,7 +22,7 @@ export async function getNotificationsForUser(): Promise<Notification[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
@@ -44,7 +44,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return 0;
 
-  const { count } = await supabase
+  const { count } = await (supabase as any)
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { EstablishmentInput, establishmentSchema, profileUpdateSchema, workingHoursSchema, serviceSchema } from './validators';
+import { EstablishmentInput, establishmentSchema, profileUpdateSchema, workingHoursSchema } from './validators';
 
 export async function createEstablishment(data: EstablishmentInput) {
   const result = establishmentSchema.safeParse(data);

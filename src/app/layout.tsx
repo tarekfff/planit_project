@@ -11,6 +11,18 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Planit — Gérez vos rendez-vous simplement",
   description: "Planit connecte vos clients à vos professionnels en toute simplicité. Gérez vos rendez-vous, simplement et intelligemment.",
+  icons: {
+    icon: [
+      { url: "/icon.png" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: "/logo.png",
+  },
+  openGraph: {
+    title: "Planit",
+    description: "Gérez vos rendez-vous simplement",
+    images: ["/logo.png"],
+  }
 };
 
 export default function RootLayout({

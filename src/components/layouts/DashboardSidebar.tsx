@@ -49,8 +49,8 @@ const SIDEBAR_CONFIG = {
 
 interface DashboardSidebarProps {
     role?: 'client' | 'professional' | 'manager' | 'admin' | string;
-    establishmentName?: string;
-    category?: string;
+    establishmentName?: string | null;
+    category?: string | null;
     unreadNotificationCount?: number;
 }
 
@@ -71,14 +71,14 @@ export function DashboardSidebar({ role = 'client', establishmentName = 'Planit'
                 <Link href="/" className="flex flex-col mb-6">
                     {/* Replaced standard img with Next.js optimized Image */}
                     {/* Wrapper crops out transparent top/bottom/left/right padding via limited box & centering */}
-                    <div className="h-[48px] w-[100px] flex items-center justify-center overflow-hidden mb-4 -ml-1">
+                    <div className="h-16 w-16 flex items-center justify-center overflow-hidden mb-4 rounded-2xl shadow-sm border border-gray-100 bg-white p-1">
                         <Image 
-                          src="/image.png" 
+                          src="/logo.svg" 
                           alt="Planit Logo" 
-                          width={133}
-                          height={133}
+                          width={64}
+                          height={64}
                           priority
-                          className="min-w-[120px] max-w-[120px] object-cover" 
+                          className="w-full h-full object-contain" 
                         />
                     </div>
                     

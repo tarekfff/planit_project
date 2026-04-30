@@ -13,15 +13,15 @@ export type AppointmentEvent = {
   id: string;
   start_time: string;
   end_time: string;
-  status: string;
-  client_notes?: string;
-  internal_notes?: string;
+  status: string | null;
+  client_notes?: string | null;
+  internal_notes?: string | null;
   professional_id: string;
-  service_id?: string;
-  client_id?: string;
-  client?: { full_name: string };
-  professionals?: { id: string; full_name: string };
-  services?: { id: string; name: string };
+  service_id?: string | null;
+  client_id?: string | null;
+  client?: { full_name: string } | null;
+  professionals?: { id: string; full_name: string } | null;
+  services?: { id: string; name: string } | null;
 };
 
 export type Professional = { id: string; full_name: string };

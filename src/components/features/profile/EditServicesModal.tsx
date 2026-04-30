@@ -21,7 +21,7 @@ export function EditServicesModal({ services }: EditServicesModalProps) {
 
         const formData = new FormData(e.currentTarget);
         try {
-            const result = await addService(formData);
+            const result = await addService(null, formData);
             if (result?.error) {
                 setError(result.error);
             } else {

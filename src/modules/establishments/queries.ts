@@ -189,7 +189,7 @@ export async function getEstablishmentProfileData() {
     .eq('establishment_id', establishment.id);
 
   // Fetch all professional<->service links for this establishment
-  const { data: professionalServices } = await supabase
+  const { data: professionalServices } = await (supabase as any)
     .from('professional_services')
     .select('professional_id, service_id');
 
@@ -198,6 +198,6 @@ export async function getEstablishmentProfileData() {
     establishment,
     professionals: professionals || [],
     services: services || [],
-    professionalServices: professionalServices || [],
+    professionalServices: (professionalServices as any[]) || [],
   };
 }

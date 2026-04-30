@@ -8,17 +8,17 @@ import { Modal } from '@/components/ui/modal';
 type Professional = {
   id: string;
   full_name: string;
-  bio?: string;
-  is_active: boolean;
-  avatar_url?: string;
+  bio?: string | null;
+  is_active: boolean | null;
+  avatar_url?: string | null;
 };
 
 type Service = {
   id: string;
   name: string;
   duration_minutes: number;
-  description?: string;
-  is_active: boolean;
+  description?: string | null;
+  is_active: boolean | null;
 };
 
 type ProfessionalService = {
@@ -364,7 +364,7 @@ export default function ManageProfessionals({
                 <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="is_active" value="true" defaultChecked={editingPro.is_active} className="text-purple-600 focus:ring-purple-600 w-4 h-4" />
+                    <input type="radio" name="is_active" value="true" defaultChecked={!!editingPro.is_active} className="text-purple-600 focus:ring-purple-600 w-4 h-4" />
                     <span>✅ Actif</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -508,7 +508,7 @@ export default function ManageProfessionals({
                 <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="is_active" value="true" defaultChecked={editingService.is_active} className="text-purple-600 focus:ring-purple-600 w-4 h-4" />
+                    <input type="radio" name="is_active" value="true" defaultChecked={!!editingService.is_active} className="text-purple-600 focus:ring-purple-600 w-4 h-4" />
                     <span>✅ Actif</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">

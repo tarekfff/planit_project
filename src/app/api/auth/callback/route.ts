@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser()
         if (user?.user_metadata?.role === 'manager') {
           const estName = user.user_metadata?.establishment_name || user.user_metadata?.full_name || 'Mon Établissement'
-          await supabase.rpc('create_manager_establishment', {
+          await (supabase as any).rpc('create_manager_establishment', {
             p_name: estName,
             p_wilaya: user.user_metadata?.wilaya || 'Non défini',
             p_phone: user.user_metadata?.phone || '',

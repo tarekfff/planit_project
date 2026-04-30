@@ -69,7 +69,7 @@ export default async function NotificationsPageContent({
               ← {backLabel}
             </Link>
             {unreadCount > 0 && (
-              <form action={markAllNotificationsAsRead}>
+              <form action={markAllNotificationsAsRead as any}>
                 <button
                   type="submit"
                   className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all border border-white/30"
