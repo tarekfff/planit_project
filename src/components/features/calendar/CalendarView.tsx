@@ -187,12 +187,12 @@ export default function CalendarView({
 
   // Custom event card rendering
   const renderEventContent = (eventInfo: EventContentArg) => {
-    const status = eventInfo.event.extendedProps.status || 'confirmed';
+    const eventStatus = eventInfo.event.extendedProps.status || 'confirmed';
     const isMine = eventInfo.event.extendedProps.isMine;
     
     // Grey out if it's someone else's appointment
     const colors = isMine 
-       ? (STATUS_COLORS[status] || STATUS_COLORS.confirmed)
+       ? (STATUS_COLORS[eventStatus] || STATUS_COLORS.confirmed)
        : { bg: '#f3f4f6', border: '#9ca3af', text: '#6b7280' };
 
     const serviceName = eventInfo.event.extendedProps.serviceName;

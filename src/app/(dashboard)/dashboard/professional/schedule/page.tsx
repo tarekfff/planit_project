@@ -21,7 +21,7 @@ export default async function CalendarPage() {
       </div>
 
       <CalendarView
-        initialAppointments={data.appointments}
+        initialAppointments={data.appointments as any[]}
         professionals={data.professionals}
         services={data.services}
         establishmentId={data.establishmentId}
