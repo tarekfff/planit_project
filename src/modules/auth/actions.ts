@@ -2,8 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { LoginSchema, RegisterSchema, ClientRegisterSchema, EstablishmentRegisterSchema } from './validators'
+import { LoginSchema, RegisterSchema, ClientRegisterSchema, EstablishmentRegisterSchema, ProfileUpdateSchema, PasswordUpdateSchema } from './validators'
 import { ROUTES } from '@/lib/constants/routes'
+import { revalidatePath } from 'next/cache'
 
 export type ActionResult = {
   success: boolean
@@ -231,4 +232,66 @@ export async function logout(formData?: FormData) {
   const supabase = await createClient()
   await supabase.auth.signOut()
   redirect(ROUTES.auth.login)
+}
+
+export async function updateProfile(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return { success: false, error: 'Non authentifié' }
+  }
+
+  const parsed = ProfileUpdateSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update(parsed.data)
+    .eq('id', user.id)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/dashboard', 'layout')
+  revalidatePath('/client', 'layout')
+  
+  return { success: true }
+}
+
+export async function updatePassword(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return { success: false, error: 'Non authentifié' }
+  }
+
+  const parsed = PasswordUpdateSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  // 1. Verify current password by attempting a login with it
+  // This is the most reliable way to check the current password server-side
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password: parsed.data.currentPassword,
+  })
+
+  if (loginError) {
+    return { success: false, error: 'Le mot de passe actuel est incorrect.' }
+  }
+
+  // 2. Update to new password
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
 }

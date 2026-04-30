@@ -44,6 +44,21 @@ export const ResetPasswordVerifySchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
+export const ProfileUpdateSchema = z.object({
+  full_name: z.string().min(2, 'Le nom est requis'),
+  phone: z.string().min(8, 'Numéro de téléphone invalide').optional().or(z.literal('')),
+  avatar_url: z.string().url().optional().or(z.literal('')),
+})
+
+export const PasswordUpdateSchema = z.object({
+  currentPassword: z.string().min(1, 'Le mot de passe actuel est requis'),
+  password: z.string().min(8, 'Le nouveau mot de passe doit contenir au moins 8 caractères'),
+  confirmPassword: z.string().min(8, 'La confirmation doit contenir au moins 8 caractères'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Les nouveaux mots de passe ne correspondent pas",
+  path: ["confirmPassword"],
+})
+
 export type LoginInput = z.infer<typeof LoginSchema>
 export type RegisterInput = z.infer<typeof RegisterSchema>
 export type ClientRegisterInput = z.infer<typeof ClientRegisterSchema>
@@ -51,5 +66,7 @@ export type EstablishmentRegisterInput = z.infer<typeof EstablishmentRegisterSch
 export type VerifyOtpInput = z.infer<typeof VerifyOtpSchema>
 export type ResetPasswordRequestInput = z.infer<typeof ResetPasswordRequestSchema>
 export type ResetPasswordVerifyInput = z.infer<typeof ResetPasswordVerifySchema>
+export type ProfileUpdateInput = z.infer<typeof ProfileUpdateSchema>
+export type PasswordUpdateInput = z.infer<typeof PasswordUpdateSchema>
 
 

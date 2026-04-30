@@ -26,6 +26,7 @@ const SIDEBAR_CONFIG = {
         { icon: Search, label: 'Search', href: '/search' },
         { icon: Calendar, label: 'My Appointments', href: '/client/appointments' },
         { icon: Bell, label: 'Notifications', href: '/client/notifications' },
+        { icon: UserCircle, label: 'My Account', href: '/client/account' },
     ],
     professional: [
         { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard/professional' },
@@ -33,6 +34,7 @@ const SIDEBAR_CONFIG = {
         { icon: Briefcase, label: 'Services & Hours', href: '/dashboard/professional/services' },
         { icon: CalendarPlus, label: 'Book Appointment', href: '/dashboard/professional/book' },
         { icon: Bell, label: 'Notifications', href: '/dashboard/professional/notifications' },
+        { icon: UserCircle, label: 'My Account', href: '/dashboard/professional/account' },
     ],
     manager: [
         { icon: Home, label: 'Home', href: '/dashboard/manager/home' },
@@ -41,6 +43,7 @@ const SIDEBAR_CONFIG = {
         { icon: Briefcase, label: 'Staff & Services', href: ROUTES.dashboard.professionals },
         { icon: Calendar, label: 'Global Calendar', href: '/dashboard/manager/calendar' },
         { icon: Bell, label: 'Notifications', href: '/dashboard/manager/notifications' },
+        { icon: UserCircle, label: 'My Account', href: '/dashboard/manager/account' },
     ],
 };
 
@@ -58,6 +61,7 @@ export function DashboardSidebar({ role = 'client', establishmentName = 'Planit'
     const accountHref = 
       role === 'professional' ? '/dashboard/professional/account' :
       role === 'manager' ? '/dashboard/manager/account' :
+      role === 'admin' ? '/dashboard/admin/account' :
       '/client/account';
 
     return (
