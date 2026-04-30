@@ -9,7 +9,7 @@ interface Appointment {
     professional: string;
     client: string;
     service: string;
-    status: 'confirmed' | 'pending' | 'cancelled';
+    status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show';
     date?: string;
 }
 
@@ -61,10 +61,15 @@ export function AppointmentsTable({ title, appointments, showDate = false }: App
                                         "inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold uppercase",
                                         apt.status === 'confirmed' ? "bg-green-50 text-green-600" :
                                             apt.status === 'pending' ? "bg-orange-50 text-orange-600" :
+                                            apt.status === 'completed' ? "bg-blue-50 text-blue-600" :
+                                            apt.status === 'no_show' ? "bg-gray-100 text-gray-600" :
                                                 "bg-red-50 text-red-600"
                                     )}>
                                         {apt.status === 'confirmed' && <CheckCircle2 className="w-3 h-3" />}
-                                        {apt.status === 'confirmed' ? 'Confirmé' : apt.status === 'pending' ? 'En attente' : 'Annulé'}
+                                        {apt.status === 'confirmed' ? 'Confirmé' : 
+                                         apt.status === 'pending' ? 'En attente' : 
+                                         apt.status === 'completed' ? 'Terminé' :
+                                         apt.status === 'no_show' ? 'Absent' : 'Annulé'}
                                     </div>
                                 </td>
                             </tr>

@@ -154,7 +154,7 @@ export async function getManagerDashboardAppointments(establishmentId: string) {
       professional: apt.professionals?.full_name || 'Inconnu',
       client: apt.profiles?.full_name || 'Inconnu',
       service: apt.services?.name || 'Service supprimé',
-      status: apt.status as 'confirmed' | 'pending' | 'cancelled',
+      status: apt.status as 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show',
       timestamp: start.getTime(),
     };
   });
@@ -266,7 +266,7 @@ export async function getProfessionalDashboardData() {
         professional: apt.professionals?.full_name || 'Inconnu',
         client: apt.profiles?.full_name || 'Inconnu',
         service: apt.services?.name || 'Inconnu',
-        status: apt.status as 'confirmed' | 'pending' | 'cancelled',
+        status: apt.status as 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show',
       });
     }
   });
