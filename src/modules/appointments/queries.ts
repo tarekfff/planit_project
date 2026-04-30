@@ -74,7 +74,7 @@ export async function getAppointmentsForClient() {
   const { data } = await supabase
     .from('appointments')
     .select(`
-      id, start_time, end_time, status, client_notes,
+      id, start_time, end_time, status, client_notes, establishment_id,
       service:services(name, price, duration_minutes),
       professional:professionals(full_name, avatar_url),
       establishment:establishments(name, address, wilaya)
@@ -418,7 +418,7 @@ export async function getClientDashboardData() {
   const { data: allAppointmentsRaw } = await supabase
     .from('appointments')
     .select(`
-      id, start_time, end_time, status, client_notes,
+      id, start_time, end_time, status, client_notes, establishment_id,
       service:services(name, price, duration_minutes),
       professional:professionals(full_name, avatar_url),
       establishment:establishments(name, address, wilaya)
