@@ -19,6 +19,7 @@ export type AppointmentEvent = {
   professional_id: string;
   service_id?: string;
   client_id?: string;
+  client?: { full_name: string };
   professionals?: { id: string; full_name: string };
   services?: { id: string; name: string };
 };
@@ -70,14 +71,15 @@ export default function CalendarView({
     const isMine = !currentProfessionalId || apt.professional_id === currentProfessionalId;
     return {
       id: apt.id,
-      title: apt.professionals?.full_name || 'RDV',
+      title: apt.client?.full_name || apt.professionals?.full_name || 'RDV',
       start: apt.start_time,
       end: apt.end_time,
-      editable: isMine, // FullCalendar standard flag to prevent drag/drop for this specific event
+      editable: isMine,
       extendedProps: {
         status: apt.status,
         serviceName: apt.services?.name,
         professionalName: apt.professionals?.full_name,
+        clientName: apt.client?.full_name,
         isMine: isMine,
         professionalId: apt.professional_id
       },

@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 /**
  * Fetch all appointments for the manager's establishment.
@@ -19,8 +20,8 @@ export async function getManagerAppointments() {
 
   if (!est) return { appointments: [], professionals: [], services: [], workingHours: [] };
 
-  // Appointments with joins
-  const { data: appointments } = await supabase
+  // Use admin client to bypass RLS for reading client names
+  const { data: appointments } = await supabaseAdmin
     .from('appointments')
     .select(`
       id,
@@ -32,6 +33,7 @@ export async function getManagerAppointments() {
       client_id,
       professional_id,
       service_id,
+      client:profiles!client_id ( full_name ),
       professionals ( id, full_name ),
       services ( id, name )
     `)

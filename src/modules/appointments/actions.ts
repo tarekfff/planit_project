@@ -3,6 +3,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { createNotification } from '@/modules/notifications/actions';
+import { sendAppointmentConfirmationEmail } from '@/lib/email';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 const appointmentSchema = z.object({
   professional_id: z.string().uuid('Sélectionnez un professionnel'),
@@ -120,6 +123,69 @@ export async function updateAppointment(prevState: any, formData: FormData) {
       throw error;
     }
 
+    // Notify the client if the status changed to confirmed or cancelled
+    if (parsed.data.status === 'confirmed' || parsed.data.status === 'cancelled') {
+      // Fetch the appointment and related data
+      const { data: appt } = await supabase
+        .from('appointments')
+        .select(`
+          client_id, 
+          services(name),
+          start_time,
+          establishments!inner(name, address)
+        `)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (appt?.client_id) {
+        const serviceName = (appt as any).services?.name || 'votre rendez-vous';
+        const establishmentName = (appt as any).establishments?.name || 'Établissement';
+        const address = (appt as any).establishments?.address || '';
+
+        if (parsed.data.status === 'confirmed') {
+          // 1. In-app notification
+          await createNotification({
+            userId: appt.client_id,
+            actorId: user.id,
+            type: 'appointment_accepted',
+            title: 'Rendez-vous confirmé !',
+            message: `Votre rendez-vous pour ${serviceName} a été confirmé.`,
+            link: '/client/appointments',
+          });
+
+          // 2. Email notification
+          try {
+            // Get client's email via supabase admin
+            const { data: { user: clientUser } } = await supabaseAdmin.auth.admin.getUserById(appt.client_id);
+            const clientName = formData.get('client_name') as string || 'Client';
+
+            if (clientUser?.email) {
+              // Send email asynchronously without blocking the response
+              sendAppointmentConfirmationEmail({
+                to: clientUser.email,
+                clientName,
+                serviceName,
+                establishmentName,
+                address,
+                startTime: new Date(appt.start_time),
+              }).catch(console.error);
+            }
+          } catch (e) {
+            console.error('Erreur lors de la récupération de l\'email client:', e);
+          }
+        } else if (parsed.data.status === 'cancelled') {
+          await createNotification({
+            userId: appt.client_id,
+            actorId: user.id,
+            type: 'appointment_cancelled',
+            title: 'Rendez-vous annulé',
+            message: `Votre rendez-vous pour ${serviceName} a malheureusement été annulé.`,
+            link: '/client/appointments',
+          });
+        }
+      }
+    }
+
     revalidatePath('/dashboard/manager/calendar');
     return { success: true };
   } catch (e: any) {
@@ -234,6 +300,27 @@ export async function createClientAppointment(prevState: any, formData: FormData
         return { success: false, error: 'Ce créneau est déjà réservé.' };
       }
       throw error;
+    }
+
+    // Notify the manager about the new appointment request
+    const { data: establishment } = await supabase
+      .from('establishments')
+      .select('manager_id, name')
+      .eq('id', estId)
+      .maybeSingle();
+
+    if (establishment?.manager_id) {
+      const startDate = new Date(raw.start_time as string);
+      const dateLabel = startDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const timeLabel = startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      await createNotification({
+        userId: establishment.manager_id,
+        actorId: user.id,
+        type: 'new_appointment',
+        title: 'Nouvelle demande de rendez-vous',
+        message: `Un client a demandé un rendez-vous le ${dateLabel} à ${timeLabel} chez ${establishment.name}.`,
+        link: '/dashboard/manager/calendar',
+      });
     }
 
     revalidatePath('/client/appointments');

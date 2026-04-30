@@ -59,7 +59,7 @@ export default function EventModal({
     if (selectedAppointment) {
       setProfessionalId(selectedAppointment.professional_id);
       setServiceId(selectedAppointment.service_id || '');
-      setClientName('');
+      setClientName(selectedAppointment.client?.full_name || '');
       setStartTime(toLocalISOString(new Date(selectedAppointment.start_time)));
       setEndTime(toLocalISOString(new Date(selectedAppointment.end_time)));
       setClientNotes(selectedAppointment.client_notes || '');

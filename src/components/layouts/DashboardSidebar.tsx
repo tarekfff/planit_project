@@ -32,6 +32,7 @@ const SIDEBAR_CONFIG = {
         { icon: Calendar, label: 'My Schedule', href: '/dashboard/professional/schedule' },
         { icon: Briefcase, label: 'Services & Hours', href: '/dashboard/professional/services' },
         { icon: CalendarPlus, label: 'Book Appointment', href: '/dashboard/professional/book' },
+        { icon: Bell, label: 'Notifications', href: '/dashboard/professional/notifications' },
     ],
     manager: [
         { icon: Home, label: 'Home', href: '/dashboard/manager/home' },
@@ -47,9 +48,10 @@ interface DashboardSidebarProps {
     role?: 'client' | 'professional' | 'manager' | 'admin' | string;
     establishmentName?: string;
     category?: string;
+    unreadNotificationCount?: number;
 }
 
-export function DashboardSidebar({ role = 'client', establishmentName = 'Planit', category = 'Établissement' }: DashboardSidebarProps) {
+export function DashboardSidebar({ role = 'client', establishmentName = 'Planit', category = 'Établissement', unreadNotificationCount = 0 }: DashboardSidebarProps) {
     const pathname = usePathname();
     const items = SIDEBAR_CONFIG[role as keyof typeof SIDEBAR_CONFIG] || SIDEBAR_CONFIG.client;
 
@@ -93,6 +95,8 @@ export function DashboardSidebar({ role = 'client', establishmentName = 'Planit'
                     const isBaseRoute = ['/dashboard/manager', '/client', '/dashboard/professional'].includes(item.href);
                     const isActive = pathname === item.href || (!isBaseRoute && pathname.startsWith(item.href + '/'));
                     const Icon = item.icon;
+                    const isNotifItem = item.href.includes('notifications');
+                    const badge = isNotifItem && unreadNotificationCount > 0 ? unreadNotificationCount : 0;
 
                     return (
                         <Link
@@ -110,6 +114,11 @@ export function DashboardSidebar({ role = 'client', establishmentName = 'Planit'
                                 isActive ? "text-gray-900" : "text-gray-500"
                             )} />
                             <span className="flex-1 truncate tracking-wide">{item.label}</span>
+                            {badge > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow">
+                                    {badge > 99 ? '99+' : badge}
+                                </span>
+                            )}
                         </Link>
                     );
                 })}
