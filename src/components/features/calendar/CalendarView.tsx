@@ -13,7 +13,7 @@ export type AppointmentEvent = {
   id: string;
   start_time: string;
   end_time: string;
-  status: string | null;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show' | null;
   client_notes?: string | null;
   internal_notes?: string | null;
   professional_id: string;

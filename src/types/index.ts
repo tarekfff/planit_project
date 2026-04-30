@@ -24,7 +24,7 @@ export type Professional = {
   created_at: string;
 };
 
-export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
 export type Appointment = {
   id: string;
@@ -34,6 +34,6 @@ export type Appointment = {
   service_id?: string;
   start_time: string;
   end_time: string;
-  status: AppointmentStatus;
+  status: AppointmentStatus | null;
   created_at: string;
 };
