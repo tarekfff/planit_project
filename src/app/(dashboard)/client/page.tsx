@@ -82,7 +82,7 @@ export default async function ClientDashboardPage() {
 
           {upcomingAppointments.length > 0 ? (
             <div className="space-y-5">
-               {upcomingAppointments.slice(0,3).map((apt: { id: string; start_time: string; establishment_id: string; establishment?: { name: string; wilaya: string }; professional?: { full_name: string }; service?: { name: string } }) => {
+               {upcomingAppointments.slice(0,3).map((apt: { id: string; start_time: string; establishment_id: string; establishment?: { name: string | null; wilaya: string | null } | null; professional?: { full_name: string | null } | null; service?: { name: string | null } | null }) => {
                   const d = new Date(apt.start_time);
                   const isToday = d.toDateString() === now.toDateString();
                   
