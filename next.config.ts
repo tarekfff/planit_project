@@ -1,3 +1,4 @@
+// Trigger fresh deployment with latest fixes
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
