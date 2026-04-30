@@ -40,10 +40,35 @@ export default async function EstablishmentProfilePage({ params }: { params: Pro
       <Link href="/search" className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-bold transition-colors">
         <ArrowLeft className="w-5 h-5" /> Retour à la recherche
       </Link>
+      
+      {/* Establishment Banner */}
+      <div className="relative h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-white dark:border-gray-800">
+        {est.banner_url ? (
+          <img 
+            src={est.banner_url} 
+            alt={`${est.name} banner`} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center relative overflow-hidden">
+             {/* Decorative abstract elements for fallback banner */}
+             <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+                <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+                <div className="absolute bottom-10 right-20 w-48 h-48 bg-white rounded-full blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-indigo-200 rounded-full blur-[100px]"></div>
+             </div>
+             <div className="relative z-10 text-white/40 flex flex-col items-center gap-3">
+                <Star className="w-16 h-16 opacity-30" />
+                <span className="text-sm font-bold tracking-widest uppercase opacity-50">Bienvenue chez {est.name}</span>
+             </div>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+      </div>
 
       {/* Header Profile */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-start relative overflow-hidden">
-        <div className="w-32 h-32 bg-gray-50 rounded-3xl flex items-center justify-center flex-shrink-0 shadow-inner border border-gray-100 overflow-hidden z-10">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-700/50 flex flex-col md:flex-row gap-8 items-start relative overflow-hidden -mt-20 mx-4 md:mx-8 z-20 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
+        <div className="w-32 h-32 bg-gray-50 dark:bg-gray-900 rounded-3xl flex items-center justify-center flex-shrink-0 shadow-xl border-4 border-white dark:border-gray-800 overflow-hidden z-10 transform -rotate-2 hover:rotate-0 transition-transform">
           {est.logo_url ? (
             <img src={est.logo_url} alt={est.name} className="w-full h-full object-cover" />
           ) : (

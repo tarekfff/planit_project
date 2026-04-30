@@ -1,6 +1,7 @@
 import { getClientDashboardData } from '@/modules/appointments/queries'
-import { Calendar, MapPin, User, Activity, Search, Edit3, XCircle, ArrowRight } from 'lucide-react'
+import { Calendar, MapPin, User, Activity, Search, Edit3, XCircle, ArrowRight, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import { AppointmentActions } from './AppointmentActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,7 @@ export default async function ClientDashboardPage() {
           </p>
           <div className="pt-4">
             <Link 
-              href="/"
+              href="/search"
               className="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-indigo-50 transition-colors px-5 md:px-6 py-3 rounded-xl font-semibold shadow-lg shadow-indigo-900/20 active:scale-95 duration-200"
             >
               <Search className="w-5 h-5 text-indigo-500" />
@@ -124,19 +125,10 @@ export default async function ClientDashboardPage() {
                             </div>
                           </div>
                           
-                          <div className="flex md:flex-col items-center flex-wrap gap-2 pt-4 md:pt-0 min-w-[160px]">
-                             <button className="flex-1 w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-700 dark:text-gray-200 hover:text-indigo-700 dark:hover:text-indigo-300 rounded-xl font-bold transition-all border border-gray-100 dark:border-gray-600 shadow-sm group">
-                               Voir details <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                             </button>
-                             <div className="flex w-full gap-2 mt-auto">
-                                <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl text-sm font-bold transition-colors shadow-sm">
-                                  <Edit3 className="w-4 h-4"/> Modifier
-                                </button>
-                                <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl text-sm font-bold transition-colors shadow-sm">
-                                  <XCircle className="w-4 h-4"/> Annuler
-                                </button>
-                             </div>
-                          </div>
+                          <AppointmentActions 
+                            appointmentId={apt.id} 
+                            establishmentId={apt.establishment_id} 
+                          />
                        </div>
                     </div>
                   )
@@ -149,9 +141,12 @@ export default async function ClientDashboardPage() {
                </div>
                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">Aucun rendez-vous à venir</h3>
                <p className="text-gray-500 font-medium">Vous n'avez aucun rendez-vous prévu pour le moment.</p>
-               <button className="mt-6 px-6 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold rounded-xl transition-colors">
+               <Link 
+                  href="/search"
+                  className="mt-6 px-6 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold rounded-xl transition-colors inline-block"
+               >
                   Rechercher un service
-               </button>
+               </Link>
             </div>
           )}
         </div>
@@ -172,21 +167,21 @@ export default async function ClientDashboardPage() {
                   {/* Item 1: Last Appointment */}
                   <li className="relative flex items-start gap-5 z-10 bg-white dark:bg-gray-800 py-1">
                      <div className="mt-1 pb-1 w-6 h-6 rounded-full border-4 border-white dark:border-gray-800 bg-green-500 shadow-sm flex-shrink-0 z-10"></div>
-                     <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700/50">
+                      <Link href="/client/appointments" className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors group">
                         <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Dernier rendez-vous</p>
                         {recentAppointment ? (
                           <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex flex-wrap gap-1.5 items-center">
                             <span className="bg-white dark:bg-gray-700 px-2 py-0.5 rounded shadow-sm border border-gray-100 dark:border-gray-600">
                               {new Date(recentAppointment.start_time).toLocaleDateString('fr-FR')}
                             </span>
-                            <span className="text-purple-600 dark:text-purple-400 font-bold">
+                            <span className="text-purple-600 dark:text-purple-400 font-bold group-hover:text-purple-700 transition-colors">
                               - {recentAppointment.service?.name || "Service"}
                             </span>
                           </p>
                         ) : (
                           <p className="text-sm font-semibold text-gray-400 py-1">Aucune activité récente</p>
                         )}
-                     </div>
+                      </Link>
                   </li>
 
                   {/* Item 2: Next Appointment */}
@@ -240,15 +235,15 @@ export default async function ClientDashboardPage() {
              </div>
              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Découvrir les professionnels</h2>
            </div>
-           <Link href="/search" className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
-             Tout voir &rarr;
+           <Link href="/client/appointments" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-lg transition-colors">
+             Mes rendez-vous &rarr;
            </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {featuredEstablishments && featuredEstablishments.length > 0 ? (
             featuredEstablishments.map((est: any) => (
-              <div key={est.id} className="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-xl transition-all duration-300 group cursor-pointer group">
+              <Link href={`/estabilshement/${est.id}`} key={est.id} className="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-xl transition-all duration-300 group cursor-pointer">
                 <div className="flex flex-col h-full">
                   <div className="flex items-start gap-4 mb-4">
                      <div className="w-14 h-14 bg-gray-50 dark:bg-gray-900 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden border border-gray-100 dark:border-gray-700">
@@ -291,11 +286,11 @@ export default async function ClientDashboardPage() {
                     )}
                   </div>
                   
-                  <button className="mt-5 w-full py-2.5 bg-gray-50 hover:bg-indigo-600 text-gray-700 hover:text-white dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-indigo-600 text-sm font-bold rounded-xl transition-colors">
+                  <div className="mt-5 w-full py-2.5 bg-gray-50 group-hover:bg-indigo-600 text-gray-700 group-hover:text-white dark:bg-gray-700/50 dark:text-gray-300 dark:group-hover:bg-indigo-600 text-sm font-bold rounded-xl transition-colors text-center">
                      Voir le profil
-                  </button>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))
           ) : (
             <div className="col-span-full py-12 text-center bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">

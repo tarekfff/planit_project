@@ -1,6 +1,7 @@
 import { getAppointmentsForClient } from '@/modules/appointments/queries';
-import { Calendar, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, CheckCircle, XCircle, AlertCircle, ArrowRight, Edit3 } from 'lucide-react';
 import Link from 'next/link';
+import { AppointmentActions } from '../AppointmentActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +67,15 @@ export default async function ClientAppointmentsPage() {
              </div>
            </div>
         </div>
+
+        {apt.status !== 'cancelled' && (
+          <div className="flex flex-col justify-center border-l border-gray-100 pl-6 ml-auto">
+             <AppointmentActions 
+               appointmentId={apt.id} 
+               establishmentId={apt.establishment_id} 
+             />
+          </div>
+        )}
       </div>
     );
   };

@@ -198,3 +198,63 @@ export async function deleteService(serviceId: string) {
   }
 }
 
+export async function uploadEstablishmentImage(formData: FormData) {
+  const { supabaseAdmin } = await import('@/lib/supabase/admin');
+  const supabase = await createClient();
+
+  // 1. Auth check
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Non autorisé' };
+
+  const file = formData.get('file') as File;
+  const type = formData.get('type') as 'logo' | 'banner';
+
+  if (!file || !type) return { success: false, error: 'Données manquantes' };
+
+  try {
+    // 2. Get establishment ID
+    const { data: est, error: estError } = await supabase
+      .from('establishments')
+      .select('id')
+      .eq('manager_id', user.id)
+      .maybeSingle();
+
+    if (estError || !est) throw new Error("Établissement introuvable");
+
+    // 3. Upload to Storage
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${est.id}/${type}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`; // Bucket is 'establishments'
+
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+      .from('establishments')
+      .upload(filePath, file, {
+        upsert: true,
+        contentType: file.type,
+      });
+
+    if (uploadError) throw uploadError;
+
+    // 4. Get public URL
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from('establishments')
+      .getPublicUrl(filePath);
+
+    // 5. Update Database
+    const updateField = type === 'logo' ? 'logo_url' : 'banner_url';
+    const { error: updateError } = await supabase
+      .from('establishments')
+      .update({ [updateField]: publicUrl })
+      .eq('id', est.id);
+
+    if (updateError) throw updateError;
+
+    revalidatePath('/dashboard/manager/profile');
+    revalidatePath(`/estabilshement/${est.id}`);
+    return { success: true, url: publicUrl };
+  } catch (e: any) {
+    console.error('Upload error:', e);
+    return { success: false, error: e.message };
+  }
+}
+

@@ -16,6 +16,8 @@ export const profileUpdateSchema = z.object({
   address: z.string().optional(),
   phone: z.string().optional(),
   contact_email: z.string().email("Email invalide").or(z.literal("")).optional(),
+  logo_url: z.string().url().optional().or(z.literal("")),
+  banner_url: z.string().url().optional().or(z.literal("")),
 });
 
 export const workingHourSchema = z.object({

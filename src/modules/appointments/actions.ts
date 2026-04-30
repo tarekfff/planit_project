@@ -330,3 +330,68 @@ export async function createClientAppointment(prevState: any, formData: FormData
     return { success: false, error: e.message };
   }
 }
+
+/**
+ * Cancel an appointment by the client
+ */
+export async function cancelClientAppointment(appointmentId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Non autorisé' };
+
+  try {
+    // Check if the appointment belongs to the client
+    const { data: appt, error: fetchError } = await supabase
+      .from('appointments')
+      .select('id, client_id, status, start_time, establishment_id, service_id, services(name)')
+      .eq('id', appointmentId)
+      .eq('client_id', user.id)
+      .maybeSingle();
+
+    if (fetchError || !appt) {
+      return { success: false, error: 'Rendez-vous introuvable ou non autorisé.' };
+    }
+
+    if (appt.status === 'cancelled') {
+      return { success: false, error: 'Ce rendez-vous est déjà annulé.' };
+    }
+
+    // Update status to cancelled
+    const { error: updateError } = await supabase
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', appointmentId);
+
+    if (updateError) throw updateError;
+
+    // Notify the manager
+    const { data: establishment } = await supabase
+      .from('establishments')
+      .select('manager_id, name')
+      .eq('id', appt.establishment_id)
+      .maybeSingle();
+
+    if (establishment?.manager_id) {
+      const serviceName = (appt as any).services?.name || 'rendez-vous';
+      const startDate = new Date(appt.start_time);
+      const dateLabel = startDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      
+      await createNotification({
+        userId: establishment.manager_id,
+        actorId: user.id,
+        type: 'appointment_cancelled',
+        title: 'Rendez-vous annulé par le client',
+        message: `Le client a annulé son rendez-vous pour ${serviceName} le ${dateLabel}.`,
+        link: '/dashboard/manager/calendar',
+      });
+    }
+
+    revalidatePath('/client');
+    revalidatePath('/client/appointments');
+    revalidatePath('/dashboard/manager/calendar');
+    
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
