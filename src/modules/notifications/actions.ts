@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 
 interface CreateNotificationParams {
@@ -19,7 +19,7 @@ interface CreateNotificationParams {
  */
 export async function createNotification(data: CreateNotificationParams) {
   // Use admin client to bypass RLS since users cannot insert notifications for others via regular client
-  const { error } = await (supabaseAdmin as any).from('notifications').insert({
+  const { error } = await (getSupabaseAdmin() as any).from('notifications').insert({
     user_id: data.userId,
     type: data.type,
     title: data.title,

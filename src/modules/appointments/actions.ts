@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createNotification } from '@/modules/notifications/actions';
 import { sendAppointmentConfirmationEmail } from '@/lib/email';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 const appointmentSchema = z.object({
   professional_id: z.string().uuid('Sélectionnez un professionnel'),
@@ -156,7 +156,7 @@ export async function updateAppointment(prevState: any, formData: FormData) {
           // 2. Email notification
           try {
             // Get client's email via supabase admin
-            const { data: { user: clientUser } } = await supabaseAdmin.auth.admin.getUserById(appt.client_id);
+            const { data: { user: clientUser } } = await getSupabaseAdmin().auth.admin.getUserById(appt.client_id);
             const clientName = formData.get('client_name') as string || 'Client';
 
             if (clientUser?.email) {

@@ -199,7 +199,8 @@ export async function deleteService(serviceId: string) {
 }
 
 export async function uploadEstablishmentImage(formData: FormData) {
-  const { supabaseAdmin } = await import('@/lib/supabase/admin');
+  const { getSupabaseAdmin } = await import('@/lib/supabase/admin');
+  const admin = getSupabaseAdmin();
   const supabase = await createClient();
 
   // 1. Auth check
@@ -226,7 +227,7 @@ export async function uploadEstablishmentImage(formData: FormData) {
     const fileName = `${est.id}/${type}_${Date.now()}.${fileExt}`;
     const filePath = `${fileName}`; // Bucket is 'establishments'
 
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+    const { data: uploadData, error: uploadError } = await admin.storage
       .from('establishments')
       .upload(filePath, file, {
         upsert: true,
@@ -236,7 +237,7 @@ export async function uploadEstablishmentImage(formData: FormData) {
     if (uploadError) throw uploadError;
 
     // 4. Get public URL
-    const { data: { publicUrl } } = supabaseAdmin.storage
+    const { data: { publicUrl } } = admin.storage
       .from('establishments')
       .getPublicUrl(filePath);
 

@@ -2,6 +2,8 @@ import { DashboardSidebar } from '@/components/layouts/DashboardSidebar';
 import { getSidebarData } from '@/modules/establishments/queries';
 import { getUnreadNotificationCount } from '@/modules/notifications/queries';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { establishment, profile } = await getSidebarData();
   const unreadCount = await getUnreadNotificationCount();

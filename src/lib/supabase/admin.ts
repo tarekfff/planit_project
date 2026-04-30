@@ -6,7 +6,13 @@ import type { Database } from '@/types/database.types';
  * Bypasses Row Level Security (RLS).
  * NEVER use this on the client-side. ONLY in Server Actions or API Routes.
  */
-export const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error('Supabase URL and Service Role Key are required for admin client.');
+  }
+
+  return createClient<Database>(url, key);
+}
